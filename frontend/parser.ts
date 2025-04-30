@@ -1,4 +1,4 @@
-import { Stmt, Program, Expression, BinaryExpression, NumericLiteral, Identifier } from "./ast.ts";
+import { Stmt, Program, Expression, NumericLiteral, Identifier } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
