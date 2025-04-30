@@ -1,5 +1,6 @@
 import { Stmt, Program, Expression, BinaryExpression, NumericLiteral, Identifier } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
+import { ParseError } from "./errors.ts";
 
 export default class Parser {
     private tokens: Token[] = [];
@@ -14,6 +15,15 @@ export default class Parser {
 
     private next () {
         const prev = this.tokens.shift() as Token;
+        return prev;
+    }
+
+    private expect (type: TokenType) {
+        const prev = this.tokens.shift() as Token;
+        if (!prev || prev.type == type) {
+            throw new ParseError(`Error: Unexpected token found while parsing. Expected: ${type}, found: ${prev}`);
+        }
+
         return prev;
     }
 
@@ -81,11 +91,18 @@ export default class Parser {
             case TokenType.Number:
                 return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
             case TokenType.Equals:
-                    return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
+                return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
+            case TokenType.OpenParen: {
+                this.next();
+                const value = this.parse_expression()
+                this.expect(TokenType.CloseParen);
+                return value;
+            }
 
             default:
                 console.error("Unexpected token found during parsing:", this.at());
                 Deno.exit(1);
         }
     }
+
 }
