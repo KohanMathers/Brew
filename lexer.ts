@@ -81,7 +81,7 @@ export function tokenize (sourceCode: string): Token[] {
     return tokens;
 }
 
-const source = await Deno.readTextFile('./lexer.ts');
+const source = await Deno.readTextFile('./test.txt');
 for (const token of tokenize(source)) {
     console.log(token);
 }
