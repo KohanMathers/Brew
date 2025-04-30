@@ -18,14 +18,17 @@ export default class Parser {
         return prev;
     }
 
-    private expect (type: TokenType) {
+    private expect(type: TokenType) {
         const prev = this.tokens.shift() as Token;
-        if (!prev || prev.type == type) {
-            throw new ParseError(`Error: Unexpected token found while parsing. Expected: ${type}, found: ${prev}`);
+        if (!prev || prev.type !== type) {
+            // Use TokenType[type] to get the string name of the enum
+            throw new ParseError(
+                `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`
+            );
         }
 
         return prev;
-    }
+    }    
 
     public ProduceAST (sourceCode: string): Program {        
         this.tokens = tokenize(sourceCode);
