@@ -50,7 +50,7 @@ export default class Parser {
                 return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
 
             default:
-                console.error("Unexpected token found during parsing.", this.at());
+                console.error("Unexpected token found during parsing:", this.at());
                 Deno.exit(1);
         }
     }
