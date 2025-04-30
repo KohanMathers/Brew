@@ -21,7 +21,6 @@ export default class Parser {
     private expect(type: TokenType) {
         const prev = this.tokens.shift() as Token;
         if (!prev || prev.type !== type) {
-            // Use TokenType[type] to get the string name of the enum
             throw new ParseError(
                 `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`
             );
