@@ -1,4 +1,4 @@
-import { Stmt, Program, Expression, NumericLiteral, Identifier } from "./ast.ts";
+import { Stmt, Program, Expression, BinaryExpression, NumericLiteral, Identifier } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 
 export default class Parser {
@@ -37,7 +37,39 @@ export default class Parser {
     }
 
     private parse_expression (): Expression {
-        return this.parse_primary_expression()
+        return this.parse_additive_expression()
+    }
+
+    private parse_additive_expression (): Expression {
+        let left = this.parse_multiplicative_expression();
+
+        while (this.at().value == "+" || this.at().value == "-") {
+            const operator = this.next().value;
+            const right = this.parse_multiplicative_expression();
+            left =  {
+                kind: "BinaryExpression",
+                left,
+                right,
+                operator,
+            } as BinaryExpression;
+        }
+        return left;
+    }
+
+    private parse_multiplicative_expression (): Expression {
+        let left = this.parse_primary_expression();
+
+        while (this.at().value == "*" || this.at().value == "/" || this.at().value == "%") {
+            const operator = this.next().value;
+            const right = this.parse_primary_expression();
+            left =  {
+                kind: "BinaryExpression",
+                left,
+                right,
+                operator,
+            } as BinaryExpression;
+        }
+        return left;
     }
 
     private parse_primary_expression (): Expression {
@@ -48,6 +80,8 @@ export default class Parser {
                 return { kind: "Identifier", symbol: this.next().value} as Identifier;
             case TokenType.Number:
                 return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
+            case TokenType.Equals:
+                    return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
 
             default:
                 console.error("Unexpected token found during parsing:", this.at());
