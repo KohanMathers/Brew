@@ -68,9 +68,9 @@ export function tokenize (sourceCode: string): Token[] {
                 
                 const reserved = KEYWORDS[ident];
                 if (typeof reserved == "number") {
-                    tokens.push(token(ident, TokenType.Identifier));
-                } else {
                     tokens.push(token(ident, reserved));
+                } else {
+                    tokens.push(token(ident, TokenType.Identifier));
                 }
             } else if (isskippable(src[0])) {
                 src.shift();
