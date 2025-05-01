@@ -13,3 +13,9 @@ export class ParseError extends CustomError {
         super(message);
     }
 }
+
+export class InterpretError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
