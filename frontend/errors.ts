@@ -19,3 +19,9 @@ export class InterpretError extends CustomError {
         super(message);
     }
 }
+
+export class CalculationError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
