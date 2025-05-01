@@ -1,5 +1,5 @@
 import Parser  from "./frontend/parser.ts";
-
+import Evaluate from "./runtime/interpreter.ts";
 repl();
 
 function repl () {
@@ -15,6 +15,8 @@ function repl () {
 
             const program = parser.ProduceAST(input);
             console.log(program);
+
+            const result = Evaluate(program);
         } catch (error) {
             console.error(`${error.name}: ${error.message}`);
         }
