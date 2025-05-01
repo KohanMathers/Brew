@@ -16,7 +16,7 @@ function repl () {
             const program = parser.ProduceAST(input);
 
             const result = Evaluate(program);
-            console.log(result)
+            console.log(result.value)
         } catch (error) {
             console.error(`${error.name}: ${error.message}`);
         }
