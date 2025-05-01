@@ -104,7 +104,7 @@ export default class Parser {
 
             default:
                 throw new ParseError(
-                    `Unexpected token found while parsing: { type: ${TokenType[prev.type]}, value: ${prev.value} }`
+                    `Unexpected token found while parsing: { type: ${TokenType[this.at().type]}, value: ${this.at().value} }`
                 );
         }
     }
