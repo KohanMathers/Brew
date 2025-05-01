@@ -14,7 +14,6 @@ function repl () {
             }
 
             const program = parser.ProduceAST(input);
-            console.log(program);
 
             const result = Evaluate(program);
         } catch (error) {
