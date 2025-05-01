@@ -1,5 +1,5 @@
 import Parser  from "./frontend/parser.ts";
-import Evaluate from "./runtime/interpreter.ts";
+import { Evaluate } from "./runtime/interpreter.ts";
 repl();
 
 function repl () {
