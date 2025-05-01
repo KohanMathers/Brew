@@ -88,11 +88,12 @@ export default class Parser {
         const token = this.at().type;
 
         switch (token) {
+            case TokenType.Null:
+                this.next();
+                return { kind: "NullLiteral", value: "null"} as NullLiteral;
             case TokenType.Identifier:
                 return { kind: "Identifier", symbol: this.next().value} as Identifier;
             case TokenType.Number:
-                return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
-            case TokenType.Equals:
                 return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
             case TokenType.OpenParen: {
                 this.next();
