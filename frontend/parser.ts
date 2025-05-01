@@ -103,8 +103,9 @@ export default class Parser {
             }
 
             default:
-                console.error("Unexpected token found during parsing:", this.at());
-                Deno.exit(1);
+                throw new ParseError(
+                    `Unexpected token found while parsing: { type: ${TokenType[prev.type]}, value: ${prev.value} }`
+                );
         }
     }
 
