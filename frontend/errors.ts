@@ -26,7 +26,7 @@ export class CalculationError extends CustomError {
     }
 }
 
-export class DeclerationError extends CustomError {
+export class DeclarationError extends CustomError {
     constructor(message: string) {
         super(message);
     }
