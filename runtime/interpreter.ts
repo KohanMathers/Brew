@@ -10,6 +10,7 @@ import {
     Program,
     BinaryExpression,
     NumericLiteral,
+    Identifier,
 } from "../frontend/ast.ts";
 import { InterpretError, CalculationError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
@@ -84,6 +85,11 @@ function EvaluateBinaryExpression(
     return { type: "null", value: "null" } as NullValue;
 }
 
+function EvaluateIdentifier(ident: Identifier, env: Environment): RuntimeValue {
+    const val = env.lookupVariable(ident.symbol);
+    return val;
+}
+
 export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
     switch (astNode.kind) {
         case "NumericLiteral":
@@ -93,6 +99,8 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
             } as NumberValue;
         case "NullLiteral":
             return { type: "null", value: "null" } as NullValue;
+        case "Identifier":
+            return EvaluateIdentifier(astNode as Identifier, env);
         case "BinaryExpression":
             return EvaluateBinaryExpression(astNode as BinaryExpression, env);
         case "Program":
