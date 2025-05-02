@@ -1,4 +1,4 @@
-import { DeclerationError, ResolutionError } from "../frontend/errors.ts";
+import { DeclarationError, ResolutionError } from "../frontend/errors.ts";
 import { RuntimeValue } from "./values.ts";
 
 export default class Environment {
@@ -12,7 +12,7 @@ export default class Environment {
 
     public declareVariable(varname: string, value: RuntimeValue): RuntimeValue {
         if (this.variables.has(varname)) {
-            throw new DeclerationError(
+            throw new DeclarationError(
                 `Cannot declare variable ${varname}: Already declared.`,
             );
         }

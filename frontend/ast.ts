@@ -1,5 +1,6 @@
 export type NodeType =
     | "Program"
+    | "VariableDeclaration"
     | "NumericLiteral"
     | "Identifier"
     | "BinaryExpression";
@@ -11,6 +12,13 @@ export interface Stmt {
 export interface Program extends Stmt {
     kind: "Program";
     body: Stmt[];
+}
+
+export interface VariableDeclaration extends Stmt {
+    kind: "VariableDeclaration";
+    constant: boolean;
+    identifier: string;
+    value?: Expression;
 }
 
 export interface Expression extends Stmt {}

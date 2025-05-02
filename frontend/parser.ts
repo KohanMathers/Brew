@@ -5,6 +5,7 @@ import {
     BinaryExpression,
     NumericLiteral,
     Identifier,
+    VariableDeclaration,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { ParseError } from "./errors.ts";
@@ -52,7 +53,43 @@ export default class Parser {
     }
 
     private parse_stmt(): Stmt {
-        return this.parse_expression();
+        switch (this.at().type) {
+            case TokenType.Let:
+            case TokenType.Const:
+                return this.parse_variable_declaration();
+            default:
+                return this.parse_expression();
+        }
+    }
+
+    private parse_variable_declaration(): Stmt {
+        const isConstant = this.next().type == TokenType.Const;
+        const identifier = this.expect(TokenType.Identifier).value;
+
+        if (this.at().type == TokenType.Semicolon) {
+            this.next();
+            if (isConstant) {
+                throw new ParseError(
+                    `Must assign value to consant expression ${identifier}. No value provided.`,
+                );
+            }
+
+            return {
+                kind: "VariableDeclaration",
+                identifier,
+                constant: false,
+            } as VariableDeclaration;
+        }
+
+        this.expect(TokenType.Equals);
+        const declaration = {
+            kind: "VariableDeclaration",
+            value: this.parse_expression(),
+            constant: isConstant,
+        } as VariableDeclaration;
+
+        this.expect(TokenType.Semicolon);
+        return declaration;
     }
 
     private parse_expression(): Expression {
