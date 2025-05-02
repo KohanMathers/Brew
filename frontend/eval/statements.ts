@@ -1,4 +1,4 @@
-import { Program } from "../ast.ts";
+import { Program, VariableDeclaration } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import { Evaluate } from "../../runtime/interpreter.ts";
 import { MakeNull, RuntimeValue } from "../../runtime/values.ts";
@@ -14,4 +14,11 @@ export function EvaluateProgram(
     }
 
     return lastEvaluated;
+}
+
+export function EvaluateVariableDeclaration(
+    arg0: VariableDeclaration,
+    env: Environment,
+): RuntimeValue {
+    throw new Error("Function not implemented.");
 }

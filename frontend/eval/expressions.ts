@@ -4,7 +4,7 @@ import { BinaryExpression, Identifier } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import { CalculationError } from "../errors.ts";
 
-export function EvaluateNumericBinaryExpression(
+function EvaluateNumericBinaryExpression(
     left: NumberValue,
     right: NumberValue,
     operator: string,

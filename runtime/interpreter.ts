@@ -3,6 +3,7 @@ import {
     RuntimeValue,
     NumberValue,
 } from "./values.ts";
+
 import {
     NodeType as _NodeType,
     Stmt,
@@ -12,9 +13,15 @@ import {
     Identifier,
     VariableDeclaration,
 } from "../frontend/ast.ts";
+
 import { InterpretError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
-import { EvaluateProgram } from "../frontend/eval/statements.ts";
+
+import {
+    EvaluateProgram,
+    EvaluateVariableDeclaration,
+} from "../frontend/eval/statements.ts";
+
 import {
     EvaluateBinaryExpression,
     EvaluateIdentifier,
@@ -43,11 +50,4 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 `The following AST node has not yet been setup for interpretation: ${astNode.kind}`,
             );
     }
-}
-
-function EvaluateVariableDeclaration(
-    arg0: VariableDeclaration,
-    env: Environment,
-): RuntimeValue {
-    throw new Error("Function not implemented.");
 }
