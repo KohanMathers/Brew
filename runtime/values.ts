@@ -13,3 +13,11 @@ export interface NumberValue extends RuntimeValue {
     type: "number";
     value: number;
 }
+
+export function MakeNumber(n = 0) {
+    return { type: "number", value: n } as NumberValue;
+}
+
+export function MakeNull() {
+    return { type: "null", value: null } as NullValue;
+}
