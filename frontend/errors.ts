@@ -37,3 +37,9 @@ export class ResolutionError extends CustomError {
         super(message);
     }
 }
+
+export class AssignmentError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
