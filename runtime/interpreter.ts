@@ -18,7 +18,7 @@ import Environment from "./environment.ts";
 function EvaluateProgram(program: Program, env: Environment): RuntimeValue {
     let lastEvaluated: RuntimeValue = {
         type: "null",
-        value: "null",
+        value: null,
     } as NullValue;
 
     for (const statement of program.body) {
@@ -82,7 +82,7 @@ function EvaluateBinaryExpression(
         );
     }
 
-    return { type: "null", value: "null" } as NullValue;
+    return { type: "null", value: null } as NullValue;
 }
 
 function EvaluateIdentifier(ident: Identifier, env: Environment): RuntimeValue {
@@ -98,7 +98,7 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 value: (astNode as NumericLiteral).value,
             } as NumberValue;
         case "NullLiteral":
-            return { type: "null", value: "null" } as NullValue;
+            return { type: "null", value: null } as NullValue;
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
         case "BinaryExpression":
