@@ -55,7 +55,6 @@ export default class Parser {
     private parse_stmt(): Stmt {
         switch (this.at().type) {
             case TokenType.Let:
-                return this.parse_variable_declaration();
             case TokenType.Const:
                 return this.parse_variable_declaration();
             default:
@@ -86,6 +85,7 @@ export default class Parser {
         const declaration = {
             kind: "VariableDeclaration",
             value: this.parse_expression(),
+            identifier,
             constant: isConstant,
         } as VariableDeclaration;
 
