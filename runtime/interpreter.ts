@@ -2,7 +2,6 @@ import {
     ValueType as _ValueType,
     RuntimeValue,
     NumberValue,
-    MakeNull,
 } from "./values.ts";
 import {
     NodeType as _NodeType,
@@ -11,81 +10,15 @@ import {
     BinaryExpression,
     NumericLiteral,
     Identifier,
+    VariableDeclaration,
 } from "../frontend/ast.ts";
-import { InterpretError, CalculationError } from "../frontend/errors.ts";
+import { InterpretError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
-
-function EvaluateProgram(program: Program, env: Environment): RuntimeValue {
-    let lastEvaluated: RuntimeValue = MakeNull();
-
-    for (const statement of program.body) {
-        lastEvaluated = Evaluate(statement, env);
-    }
-
-    return lastEvaluated;
-}
-
-function EvaluateNumericBinaryExpression(
-    left: NumberValue,
-    right: NumberValue,
-    operator: string,
-): NumberValue {
-    const leftVal = left.value;
-    const rightVal = right.value;
-
-    let result: number;
-
-    switch (operator) {
-        case "+":
-            result = leftVal + rightVal;
-            break;
-        case "-":
-            result = leftVal - rightVal;
-            break;
-        case "*":
-            result = leftVal * rightVal;
-            break;
-        case "/":
-            if (rightVal === 0) {
-                throw new CalculationError("Division by zero");
-            }
-            result = leftVal / rightVal;
-            break;
-        case "%":
-            result = leftVal % rightVal;
-            break;
-        default:
-            throw new CalculationError(`Unsupported operator: ${operator}`);
-    }
-
-    return {
-        type: "number",
-        value: result,
-    } as NumberValue;
-}
-
-function EvaluateBinaryExpression(
-    binop: BinaryExpression,
-    env: Environment,
-): RuntimeValue {
-    const left = Evaluate(binop.left, env);
-    const right = Evaluate(binop.right, env);
-
-    if (left.type === "number" && right.type === "number") {
-        return EvaluateNumericBinaryExpression(
-            left as NumberValue,
-            right as NumberValue,
-            binop.operator,
-        );
-    }
-
-    return MakeNull();
-}
-
-function EvaluateIdentifier(ident: Identifier, env: Environment): RuntimeValue {
-    const val = env.lookupVariable(ident.symbol);
-    return val;
-}
+import { EvaluateProgram } from "../frontend/eval/statements.ts";
+import {
+    EvaluateBinaryExpression,
+    EvaluateIdentifier,
+} from "../frontend/eval/expressions.ts";
 
 export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
     switch (astNode.kind) {
@@ -100,9 +33,21 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
             return EvaluateBinaryExpression(astNode as BinaryExpression, env);
         case "Program":
             return EvaluateProgram(astNode as Program, env);
+        case "VariableDeclaration":
+            return EvaluateVariableDeclaration(
+                astNode as VariableDeclaration,
+                env,
+            );
         default:
             throw new InterpretError(
                 `The following AST node has not yet been setup for interpretation: ${astNode.kind}`,
             );
     }
+}
+
+function EvaluateVariableDeclaration(
+    arg0: VariableDeclaration,
+    env: Environment,
+): RuntimeValue {
+    throw new Error("Function not implemented.");
 }
