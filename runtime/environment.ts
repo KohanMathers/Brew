@@ -20,13 +20,13 @@ export default class Environment {
 
     public assignVariable(varname: string, value: RuntimeValue): RuntimeValue {
         const env = this.resolve(varname);
-        env.variables.set(varname, value) as RuntimeValue;
+        env.variables.set(varname, value);
         return value;
     }
 
     public lookupVariable(varname: string): RuntimeValue {
         const env = this.resolve(varname);
-        return env.variables.get(varname);
+        return env.variables.get(varname) as RuntimeValue;
     }
 
     public resolve(varname: string): Environment {

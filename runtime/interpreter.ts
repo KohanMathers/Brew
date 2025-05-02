@@ -1,12 +1,18 @@
-import { ValueType, RuntimeValue, NumberValue, NullValue } from "./values.ts";
 import {
-    NodeType,
+    ValueType as _ValueType,
+    RuntimeValue,
+    NumberValue,
+    NullValue,
+} from "./values.ts";
+import {
+    NodeType as _NodeType,
     Stmt,
     Program,
     BinaryExpression,
     NumericLiteral,
 } from "../frontend/ast.ts";
 import { InterpretError, CalculationError } from "../frontend/errors.ts";
+import Environment from "./environment.ts";
 
 function EvaluateProgram(program: Program, env: Environment): RuntimeValue {
     let lastEvaluated: RuntimeValue = {
