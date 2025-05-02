@@ -99,9 +99,6 @@ export default class Parser {
         const token = this.at().type;
 
         switch (token) {
-            case TokenType.Null:
-                this.next();
-                return { kind: "NullLiteral", value: "null" } as NullLiteral;
             case TokenType.Identifier:
                 return {
                     kind: "Identifier",

@@ -94,8 +94,6 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 type: "number",
                 value: (astNode as NumericLiteral).value,
             } as NumberValue;
-        case "NullLiteral":
-            return MakeNull();
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
         case "BinaryExpression":
