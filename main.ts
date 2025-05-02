@@ -1,13 +1,13 @@
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import Environment from "./runtime/environment.ts";
-import { NumberValue } from "./runtime/values.ts";
+import { MakeNumber } from "./runtime/values.ts";
 repl();
 
 function repl() {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("x", { value: 100, type: "number" } as NumberValue);
+    env.declareVariable("x", MakeNumber(100));
     console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {
