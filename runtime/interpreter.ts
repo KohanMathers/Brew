@@ -8,14 +8,14 @@ import {
 } from "../frontend/ast.ts";
 import { InterpretError, CalculationError } from "../frontend/errors.ts";
 
-function EvaluateProgram(program: Program): RuntimeValue {
+function EvaluateProgram(program: Program, env: Environment): RuntimeValue {
     let lastEvaluated: RuntimeValue = {
         type: "null",
         value: "null",
     } as NullValue;
 
     for (const statement of program.body) {
-        lastEvaluated = Evaluate(statement);
+        lastEvaluated = Evaluate(statement, env);
     }
 
     return lastEvaluated;
@@ -60,9 +60,12 @@ function EvaluateNumericBinaryExpression(
     } as NumberValue;
 }
 
-function EvaluateBinaryExpression(binop: BinaryExpression): RuntimeValue {
-    const left = Evaluate(binop.left);
-    const right = Evaluate(binop.right);
+function EvaluateBinaryExpression(
+    binop: BinaryExpression,
+    env: Environment,
+): RuntimeValue {
+    const left = Evaluate(binop.left, env);
+    const right = Evaluate(binop.right, env);
 
     if (left.type === "number" && right.type === "number") {
         return EvaluateNumericBinaryExpression(
@@ -75,7 +78,7 @@ function EvaluateBinaryExpression(binop: BinaryExpression): RuntimeValue {
     return { type: "null", value: "null" } as NullValue;
 }
 
-export function Evaluate(astNode: Stmt): RuntimeValue {
+export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
     switch (astNode.kind) {
         case "NumericLiteral":
             return {
@@ -85,9 +88,9 @@ export function Evaluate(astNode: Stmt): RuntimeValue {
         case "NullLiteral":
             return { type: "null", value: "null" } as NullValue;
         case "BinaryExpression":
-            return EvaluateBinaryExpression(astNode as BinaryExpression);
+            return EvaluateBinaryExpression(astNode as BinaryExpression, env);
         case "Program":
-            return EvaluateProgram(astNode as Program);
+            return EvaluateProgram(astNode as Program, env);
         default:
             throw new InterpretError(
                 `The following AST node has not yet been setup for interpretation: ${astNode.kind}`,
