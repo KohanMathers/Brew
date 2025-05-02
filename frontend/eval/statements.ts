@@ -23,5 +23,9 @@ export function EvaluateVariableDeclaration(
     const value = declaration.value
         ? Evaluate(declaration.value, env)
         : MakeNull();
-    return env.declareVariable(declaration.identifier, value);
+    return env.declareVariable(
+        declaration.identifier,
+        value,
+        declaration.constant,
+    );
 }

@@ -1,16 +1,26 @@
-import { DeclarationError, ResolutionError } from "../frontend/errors.ts";
+import {
+    DeclarationError,
+    ResolutionError,
+    AssignmentError,
+} from "../frontend/errors.ts";
 import { RuntimeValue } from "./values.ts";
 
 export default class Environment {
     private parent?: Environment;
     private variables: Map<string, RuntimeValue>;
+    private constants: Set<string>;
 
     constructor(parentEnv?: Environment) {
         this.parent = parentEnv;
         this.variables = new Map();
+        this.constants = new Set();
     }
 
-    public declareVariable(varname: string, value: RuntimeValue): RuntimeValue {
+    public declareVariable(
+        varname: string,
+        value: RuntimeValue,
+        constant: boolean,
+    ): RuntimeValue {
         if (this.variables.has(varname)) {
             throw new DeclarationError(
                 `Cannot declare variable ${varname}: Already declared.`,
@@ -18,11 +28,18 @@ export default class Environment {
         }
 
         this.variables.set(varname, value);
+
+        if (constant) this.constants.add(varname);
         return value;
     }
 
     public assignVariable(varname: string, value: RuntimeValue): RuntimeValue {
         const env = this.resolve(varname);
+        if (env.constants.has(varname)) {
+            throw new AssignmentError(
+                `Cannot assign to variable '${varname}': Is constant.`,
+            );
+        }
         env.variables.set(varname, value);
         return value;
     }
