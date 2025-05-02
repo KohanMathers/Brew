@@ -13,4 +13,3 @@ export interface NumberValue extends RuntimeValue {
     type: "number";
     value: number;
 }
-

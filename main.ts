@@ -1,10 +1,10 @@
-import Parser  from "./frontend/parser.ts";
+import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 repl();
 
-function repl () {
-    const parser = new Parser
-    console.log("\nPaperBag Repl v0.1")
+function repl() {
+    const parser = new Parser();
+    console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {
             const input = prompt("> ");
@@ -16,9 +16,9 @@ function repl () {
             const program = parser.ProduceAST(input);
 
             const result = Evaluate(program);
-            console.log(result.value)
+            console.log(result.value);
         } catch (error) {
             console.error(`${error.name}: ${error.message}`);
         }
-    } 
+    }
 }

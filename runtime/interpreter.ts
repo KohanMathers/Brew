@@ -1,21 +1,34 @@
-import { ValueType, RuntimeValue, NumberValue, NullValue } from "./values.ts"
-import { NodeType, Stmt, Program, BinaryExpression, NumericLiteral } from "../frontend/ast.ts"
+import { ValueType, RuntimeValue, NumberValue, NullValue } from "./values.ts";
+import {
+    NodeType,
+    Stmt,
+    Program,
+    BinaryExpression,
+    NumericLiteral,
+} from "../frontend/ast.ts";
 import { InterpretError, CalculationError } from "../frontend/errors.ts";
 
-function EvaluateProgram (program: Program): RuntimeValue {
-    let lastEvaluated: RuntimeValue = { type: "null", value: "null" } as NullValue;
-    
+function EvaluateProgram(program: Program): RuntimeValue {
+    let lastEvaluated: RuntimeValue = {
+        type: "null",
+        value: "null",
+    } as NullValue;
+
     for (const statement of program.body) {
         lastEvaluated = Evaluate(statement);
     }
-    
+
     return lastEvaluated;
 }
 
-function EvaluateNumericBinaryExpression(left: NumberValue, right: NumberValue, operator: string): NumberValue {
+function EvaluateNumericBinaryExpression(
+    left: NumberValue,
+    right: NumberValue,
+    operator: string,
+): NumberValue {
     const leftVal = left.value;
     const rightVal = right.value;
-    
+
     let result: number;
 
     switch (operator) {
@@ -43,7 +56,7 @@ function EvaluateNumericBinaryExpression(left: NumberValue, right: NumberValue, 
 
     return {
         type: "number",
-        value: result
+        value: result,
     } as NumberValue;
 }
 
@@ -55,7 +68,7 @@ function EvaluateBinaryExpression(binop: BinaryExpression): RuntimeValue {
         return EvaluateNumericBinaryExpression(
             left as NumberValue,
             right as NumberValue,
-            binop.operator
+            binop.operator,
         );
     }
 
@@ -67,7 +80,7 @@ export function Evaluate(astNode: Stmt): RuntimeValue {
         case "NumericLiteral":
             return {
                 type: "number",
-                value: (astNode as NumericLiteral).value
+                value: (astNode as NumericLiteral).value,
             } as NumberValue;
         case "NullLiteral":
             return { type: "null", value: "null" } as NullValue;
@@ -77,7 +90,7 @@ export function Evaluate(astNode: Stmt): RuntimeValue {
             return EvaluateProgram(astNode as Program);
         default:
             throw new InterpretError(
-                `The following AST node has not yet been setup for interpretation: ${astNode.kind}`
+                `The following AST node has not yet been setup for interpretation: ${astNode.kind}`,
             );
-    }    
+    }
 }

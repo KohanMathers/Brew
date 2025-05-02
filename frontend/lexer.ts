@@ -1,6 +1,6 @@
 export interface Token {
-    value: string,
-    type: TokenType,
+    value: string;
+    type: TokenType;
 }
 
 export enum TokenType {
@@ -16,56 +16,62 @@ export enum TokenType {
 }
 
 const KEYWORDS: Record<string, TokenType> = {
-    "let": TokenType.Let,
-    "null": TokenType.Null,
+    let: TokenType.Let,
+    null: TokenType.Null,
 };
 
-function token (value = "", type: TokenType): Token {
-    return {value, type};
+function token(value = "", type: TokenType): Token {
+    return { value, type };
 }
 
-function isalpha (src: string) {
+function isalpha(src: string) {
     return src.toUpperCase() != src.toLowerCase();
 }
 
-function isint (src: string) {
+function isint(src: string) {
     const c = src.charCodeAt(0);
-    const bounds = ['0'.charCodeAt(0), '9'.charCodeAt(0)];
+    const bounds = ["0".charCodeAt(0), "9".charCodeAt(0)];
 
-    return (c >= bounds[0] && c <= bounds[1]);
+    return c >= bounds[0] && c <= bounds[1];
 }
 
-function isskippable (src: string) {
-    return src == ' ' || src == '\n' || src == '\t';
+function isskippable(src: string) {
+    return src == " " || src == "\n" || src == "\t";
 }
 
-export function tokenize (sourceCode: string): Token[] {
+export function tokenize(sourceCode: string): Token[] {
     const tokens = new Array<Token>();
     const src = sourceCode.split("");
 
     while (src.length > 0) {
-        if (src[0] == '(') {
+        if (src[0] == "(") {
             tokens.push(token(src.shift(), TokenType.OpenParen));
-        } else if (src[0] == ')') {
+        } else if (src[0] == ")") {
             tokens.push(token(src.shift(), TokenType.CloseParen));
-        } else if (src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == "/" || src[0] == "%") {
+        } else if (
+            src[0] == "+" ||
+            src[0] == "-" ||
+            src[0] == "*" ||
+            src[0] == "/" ||
+            src[0] == "%"
+        ) {
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
-        } else if (src[0] == '=') {
+        } else if (src[0] == "=") {
             tokens.push(token(src.shift(), TokenType.Equals));
         } else {
             if (isint(src[0])) {
                 let num = "";
                 while (src.length > 0 && isint(src[0])) {
-                    num += src.shift()
+                    num += src.shift();
                 }
 
                 tokens.push(token(num, TokenType.Number));
             } else if (isalpha(src[0])) {
                 let ident = "";
                 while (src.length > 0 && isalpha(src[0])) {
-                    ident += src.shift()
+                    ident += src.shift();
                 }
-                
+
                 const reserved = KEYWORDS[ident];
                 if (typeof reserved == "number") {
                     tokens.push(token(ident, reserved));
@@ -81,6 +87,6 @@ export function tokenize (sourceCode: string): Token[] {
         }
     }
 
-    tokens.push({type: TokenType.EOF, value: "EndOfFile"});
+    tokens.push({ type: TokenType.EOF, value: "EndOfFile" });
     return tokens;
 }

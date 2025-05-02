@@ -1,19 +1,26 @@
-import { Stmt, Program, Expression, BinaryExpression, NumericLiteral, Identifier } from "./ast.ts";
+import {
+    Stmt,
+    Program,
+    Expression,
+    BinaryExpression,
+    NumericLiteral,
+    Identifier,
+} from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { ParseError } from "./errors.ts";
 
 export default class Parser {
     private tokens: Token[] = [];
 
-    private not_eof (): boolean {
+    private not_eof(): boolean {
         return this.tokens[0].type != TokenType.EOF;
     }
 
-    private at () {
+    private at() {
         return this.tokens[0] as Token;
     }
 
-    private next () {
+    private next() {
         const prev = this.tokens.shift() as Token;
         return prev;
     }
@@ -22,14 +29,14 @@ export default class Parser {
         const prev = this.tokens.shift() as Token;
         if (!prev || prev.type !== type) {
             throw new ParseError(
-                `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`
+                `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`,
             );
         }
 
         return prev;
-    }    
+    }
 
-    public ProduceAST (sourceCode: string): Program {        
+    public ProduceAST(sourceCode: string): Program {
         this.tokens = tokenize(sourceCode);
 
         const program: Program = {
@@ -40,25 +47,25 @@ export default class Parser {
         while (this.not_eof()) {
             program.body.push(this.parse_stmt());
         }
-        
+
         return program;
     }
 
-    private parse_stmt (): Stmt {
+    private parse_stmt(): Stmt {
         return this.parse_expression();
     }
 
-    private parse_expression (): Expression {
-        return this.parse_additive_expression()
+    private parse_expression(): Expression {
+        return this.parse_additive_expression();
     }
 
-    private parse_additive_expression (): Expression {
+    private parse_additive_expression(): Expression {
         let left = this.parse_multiplicative_expression();
 
         while (this.at().value == "+" || this.at().value == "-") {
             const operator = this.next().value;
             const right = this.parse_multiplicative_expression();
-            left =  {
+            left = {
                 kind: "BinaryExpression",
                 left,
                 right,
@@ -68,13 +75,17 @@ export default class Parser {
         return left;
     }
 
-    private parse_multiplicative_expression (): Expression {
+    private parse_multiplicative_expression(): Expression {
         let left = this.parse_primary_expression();
 
-        while (this.at().value == "*" || this.at().value == "/" || this.at().value == "%") {
+        while (
+            this.at().value == "*" ||
+            this.at().value == "/" ||
+            this.at().value == "%"
+        ) {
             const operator = this.next().value;
             const right = this.parse_primary_expression();
-            left =  {
+            left = {
                 kind: "BinaryExpression",
                 left,
                 right,
@@ -84,29 +95,34 @@ export default class Parser {
         return left;
     }
 
-    private parse_primary_expression (): Expression {
+    private parse_primary_expression(): Expression {
         const token = this.at().type;
 
         switch (token) {
             case TokenType.Null:
                 this.next();
-                return { kind: "NullLiteral", value: "null"} as NullLiteral;
+                return { kind: "NullLiteral", value: "null" } as NullLiteral;
             case TokenType.Identifier:
-                return { kind: "Identifier", symbol: this.next().value} as Identifier;
+                return {
+                    kind: "Identifier",
+                    symbol: this.next().value,
+                } as Identifier;
             case TokenType.Number:
-                return { kind: "NumericLiteral", value: parseFloat(this.next().value)} as NumericLiteral;
+                return {
+                    kind: "NumericLiteral",
+                    value: parseFloat(this.next().value),
+                } as NumericLiteral;
             case TokenType.OpenParen: {
                 this.next();
-                const value = this.parse_expression()
+                const value = this.parse_expression();
                 this.expect(TokenType.CloseParen);
                 return value;
             }
 
             default:
                 throw new ParseError(
-                    `Unexpected token found while parsing: { type: ${TokenType[this.at().type]}, value: ${this.at().value} }`
+                    `Unexpected token found while parsing: { type: ${TokenType[this.at().type]}, value: ${this.at().value} }`,
                 );
         }
     }
-
 }
