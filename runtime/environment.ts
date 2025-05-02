@@ -1,3 +1,4 @@
+import { DeclerationError, ResolutionError } from "../frontend/errors.ts";
 import { RuntimeValue } from "./values.ts";
 
 export default class Environment {
@@ -11,7 +12,9 @@ export default class Environment {
 
     public declareVariable(varname: string, value: RuntimeValue): RuntimeValue {
         if (this.variables.has(varname)) {
-            throw `Cannot declare variable ${varname}: Already declared.`;
+            throw new DeclerationError(
+                `Cannot declare variable ${varname}: Already declared.`,
+            );
         }
 
         this.variables.set(varname, value);
@@ -33,7 +36,9 @@ export default class Environment {
         if (this.variables.has(varname)) return this;
 
         if (this.parent == undefined)
-            throw `Cannot resolve '${varname}': Does not exist.`;
+            throw new ResolutionError(
+                `Cannot resolve '${varname}': Does not exist.`,
+            );
 
         return this.parent.resolve(varname);
     }
