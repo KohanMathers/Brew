@@ -2,7 +2,7 @@ import {
     ValueType as _ValueType,
     RuntimeValue,
     NumberValue,
-    NullValue,
+    MakeNull,
 } from "./values.ts";
 import {
     NodeType as _NodeType,
@@ -16,10 +16,7 @@ import { InterpretError, CalculationError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
 
 function EvaluateProgram(program: Program, env: Environment): RuntimeValue {
-    let lastEvaluated: RuntimeValue = {
-        type: "null",
-        value: null,
-    } as NullValue;
+    let lastEvaluated: RuntimeValue = MakeNull();
 
     for (const statement of program.body) {
         lastEvaluated = Evaluate(statement, env);
@@ -82,7 +79,7 @@ function EvaluateBinaryExpression(
         );
     }
 
-    return { type: "null", value: null } as NullValue;
+    return MakeNull();
 }
 
 function EvaluateIdentifier(ident: Identifier, env: Environment): RuntimeValue {
@@ -98,7 +95,7 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 value: (astNode as NumericLiteral).value,
             } as NumberValue;
         case "NullLiteral":
-            return { type: "null", value: null } as NullValue;
+            return MakeNull();
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
         case "BinaryExpression":
