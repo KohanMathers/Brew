@@ -25,3 +25,15 @@ export class CalculationError extends CustomError {
         super(message);
     }
 }
+
+export class DeclerationError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+export class ResolutionError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
