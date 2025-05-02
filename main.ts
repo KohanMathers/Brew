@@ -1,9 +1,11 @@
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
+import Environment from "./runtime/environment.ts";
 repl();
 
 function repl() {
     const parser = new Parser();
+    const env = new Environment();
     console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {
@@ -15,10 +17,14 @@ function repl() {
 
             const program = parser.ProduceAST(input);
 
-            const result = Evaluate(program);
-            console.log(result.value);
+            const result = Evaluate(program, env);
+            console.log(result);
         } catch (error) {
-            console.error(`${error.name}: ${error.message}`);
+            if (error instanceof Error) {
+                console.error(`${error.name}: ${error.message}`);
+            } else {
+                console.error("Unknown error", error);
+            }
         }
     }
 }
