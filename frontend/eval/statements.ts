@@ -17,8 +17,11 @@ export function EvaluateProgram(
 }
 
 export function EvaluateVariableDeclaration(
-    arg0: VariableDeclaration,
+    declaration: VariableDeclaration,
     env: Environment,
 ): RuntimeValue {
-    throw new Error("Function not implemented.");
+    const value = declaration.value
+        ? Evaluate(declaration.value, env)
+        : MakeNull();
+    return env.declareVariable(declaration.identifier, value);
 }
