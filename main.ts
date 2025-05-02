@@ -1,13 +1,12 @@
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import Environment from "./runtime/environment.ts";
-import { MakeBool, MakeNull, MakeNumber } from "./runtime/values.ts";
+import { MakeBool, MakeNull } from "./runtime/values.ts";
 repl();
 
 function repl() {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("x", MakeNumber(100));
     env.declareVariable("null", MakeNull());
     env.declareVariable("true", MakeBool(true));
     env.declareVariable("false", MakeBool(false));
