@@ -7,9 +7,9 @@ repl();
 function repl() {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("null", MakeNull());
-    env.declareVariable("true", MakeBool(true));
-    env.declareVariable("false", MakeBool(false));
+    env.declareVariable("null", MakeNull(), true);
+    env.declareVariable("true", MakeBool(true), true);
+    env.declareVariable("false", MakeBool(false), true);
     console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {
