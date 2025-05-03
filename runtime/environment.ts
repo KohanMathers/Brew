@@ -6,10 +6,13 @@ import {
 
 import { MakeBool, MakeNull, RuntimeValue } from "./values.ts";
 
-function setupScope(env: Environment) {
+export function createGlobalEnv() {
+    const env = new Environment();
     env.declareVariable("null", MakeNull(), true);
     env.declareVariable("true", MakeBool(true), true);
     env.declareVariable("false", MakeBool(false), true);
+
+    return env;
 }
 
 export default class Environment {
@@ -22,7 +25,6 @@ export default class Environment {
         this.parent = parentEnv;
         this.variables = new Map();
         this.constants = new Set();
-        if (global) setupScope(this);
     }
 
     public declareVariable(

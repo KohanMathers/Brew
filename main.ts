@@ -1,12 +1,12 @@
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
-import Environment from "./runtime/environment.ts";
+import { createGlobalEnv } from "./runtime/environment.ts";
 //repl();
 run("./test.txt");
 
 async function run(filename: string) {
     const parser = new Parser();
-    const env = new Environment();
+    const env = createGlobalEnv();
     try {
         const input = await Deno.readTextFile(filename);
 
@@ -25,7 +25,7 @@ async function run(filename: string) {
 
 function _repl() {
     const parser = new Parser();
-    const env = new Environment();
+    const env = createGlobalEnv();
     console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {
