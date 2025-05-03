@@ -41,7 +41,7 @@ function isint(src: string) {
 }
 
 function isskippable(src: string) {
-    return src == " " || src == "\n" || src == "\t";
+    return src == " " || src == "\n" || src == "\t" || src == "\r";
 }
 
 export function tokenize(sourceCode: string): Token[] {
