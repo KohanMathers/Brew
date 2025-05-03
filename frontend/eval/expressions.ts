@@ -1,6 +1,16 @@
 import { Evaluate } from "../../runtime/interpreter.ts";
-import { NumberValue, RuntimeValue, MakeNull } from "../../runtime/values.ts";
-import { AssignmentExpression, BinaryExpression, Identifier } from "../ast.ts";
+import {
+    NumberValue,
+    RuntimeValue,
+    MakeNull,
+    ObjectValue,
+} from "../../runtime/values.ts";
+import {
+    AssignmentExpression,
+    BinaryExpression,
+    Identifier,
+    ObjectLiteral,
+} from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import { AssignmentError, CalculationError } from "../errors.ts";
 
@@ -67,6 +77,19 @@ export function EvaluateIdentifier(
 ): RuntimeValue {
     const val = env.lookupVariable(ident.symbol);
     return val;
+}
+
+export function EvaluateObjectExpression(
+    obj: ObjectLiteral,
+    env: Environment,
+): RuntimeValue {
+    const object = { type: "object", properties: new Map() } as ObjectValue;
+    for (const { key, value } of obj.properties) {
+        const runtimeValue =
+            value == undefined ? env.lookupVariable(key) : Evaluate(value, env);
+        object.properties.set(key, runtimeValue);
+    }
+    return object;
 }
 
 export function EvaluateAssignment(
