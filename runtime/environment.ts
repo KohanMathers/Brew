@@ -21,7 +21,6 @@ export default class Environment {
     private constants: Set<string>;
 
     constructor(parentEnv?: Environment) {
-        const global = parentEnv ? true : false;
         this.parent = parentEnv;
         this.variables = new Map();
         this.constants = new Set();
