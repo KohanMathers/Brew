@@ -1,16 +1,12 @@
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import Environment from "./runtime/environment.ts";
-import { MakeBool, MakeNull } from "./runtime/values.ts";
 //repl();
 run("./test.txt");
 
 async function run(filename: string) {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("null", MakeNull(), true);
-    env.declareVariable("true", MakeBool(true), true);
-    env.declareVariable("false", MakeBool(false), true);
     try {
         const input = await Deno.readTextFile(filename);
 
@@ -30,9 +26,6 @@ async function run(filename: string) {
 function _repl() {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("null", MakeNull(), true);
-    env.declareVariable("true", MakeBool(true), true);
-    env.declareVariable("false", MakeBool(false), true);
     console.log("\nPaperBag Repl v0.1");
     while (true) {
         try {

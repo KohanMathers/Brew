@@ -3,7 +3,14 @@ import {
     ResolutionError,
     AssignmentError,
 } from "../frontend/errors.ts";
-import { RuntimeValue } from "./values.ts";
+
+import { MakeBool, MakeNull, RuntimeValue } from "./values.ts";
+
+function setupScope(env: Environment) {
+    env.declareVariable("null", MakeNull(), true);
+    env.declareVariable("true", MakeBool(true), true);
+    env.declareVariable("false", MakeBool(false), true);
+}
 
 export default class Environment {
     private parent?: Environment;
@@ -11,9 +18,11 @@ export default class Environment {
     private constants: Set<string>;
 
     constructor(parentEnv?: Environment) {
+        const global = parentEnv ? true : false;
         this.parent = parentEnv;
         this.variables = new Map();
         this.constants = new Set();
+        if (global) setupScope(this);
     }
 
     public declareVariable(
