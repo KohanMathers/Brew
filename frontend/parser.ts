@@ -6,6 +6,7 @@ import {
     NumericLiteral,
     Identifier,
     VariableDeclaration,
+    AssignmentExpression,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { ParseError } from "./errors.ts";
@@ -94,7 +95,22 @@ export default class Parser {
     }
 
     private parse_expression(): Expression {
-        return this.parse_additive_expression();
+        return this.parse_assignment_Expression();
+    }
+
+    private parse_assignment_Expression(): Expression {
+        const left = this.parse_additive_expression();
+
+        if (this.at().type == TokenType.Equals) {
+            this.next();
+            const value = this.parse_assignment_Expression();
+            return {
+                value,
+                assignee: left,
+                kind: "AssignmentExpression",
+            } as AssignmentExpression;
+        }
+        return left;
     }
 
     private parse_additive_expression(): Expression {

@@ -1,8 +1,8 @@
 import { Evaluate } from "../../runtime/interpreter.ts";
 import { NumberValue, RuntimeValue, MakeNull } from "../../runtime/values.ts";
-import { BinaryExpression, Identifier } from "../ast.ts";
+import { AssignmentExpression, BinaryExpression, Identifier } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
-import { CalculationError } from "../errors.ts";
+import { AssignmentError, CalculationError } from "../errors.ts";
 
 function EvaluateNumericBinaryExpression(
     left: NumberValue,
@@ -67,4 +67,18 @@ export function EvaluateIdentifier(
 ): RuntimeValue {
     const val = env.lookupVariable(ident.symbol);
     return val;
+}
+
+export function EvaluateAssignment(
+    node: AssignmentExpression,
+    env: Environment,
+): RuntimeValue {
+    if (node.assignee.kind != "Identifier") {
+        throw new AssignmentError(
+            `Invalid assignment target: ${JSON.stringify(node.assignee)}`,
+        );
+    }
+
+    const varname = (node.assignee as Identifier).symbol;
+    return env.assignVariable(varname, Evaluate(node.value, env));
 }

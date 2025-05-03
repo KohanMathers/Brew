@@ -12,6 +12,7 @@ import {
     NumericLiteral,
     Identifier,
     VariableDeclaration,
+    AssignmentExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -23,6 +24,7 @@ import {
 } from "../frontend/eval/statements.ts";
 
 import {
+    EvaluateAssignment,
     EvaluateBinaryExpression,
     EvaluateIdentifier,
 } from "../frontend/eval/expressions.ts";
@@ -36,6 +38,8 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
             } as NumberValue;
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
+        case "AssignmentExpression":
+            return EvaluateAssignment(astNode as AssignmentExpression, env);
         case "BinaryExpression":
             return EvaluateBinaryExpression(astNode as BinaryExpression, env);
         case "Program":
