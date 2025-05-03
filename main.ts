@@ -2,9 +2,32 @@ import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import Environment from "./runtime/environment.ts";
 import { MakeBool, MakeNull } from "./runtime/values.ts";
-repl();
+//repl();
+run("./test.txt");
 
-function repl() {
+async function run(filename: string) {
+    const parser = new Parser();
+    const env = new Environment();
+    env.declareVariable("null", MakeNull(), true);
+    env.declareVariable("true", MakeBool(true), true);
+    env.declareVariable("false", MakeBool(false), true);
+    try {
+        const input = await Deno.readTextFile(filename);
+
+        const program = parser.ProduceAST(input);
+
+        const result = Evaluate(program, env);
+        console.log(result);
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(`${error.name}: ${error.message}`);
+        } else {
+            console.error("Unknown error:", error);
+        }
+    }
+}
+
+function _repl() {
     const parser = new Parser();
     const env = new Environment();
     env.declareVariable("null", MakeNull(), true);
