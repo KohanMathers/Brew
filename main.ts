@@ -15,7 +15,9 @@ function repl() {
         try {
             const input = prompt("> ");
 
-            if (!input || input.includes("exit")) {
+            if (!input) {
+                continue;
+            } else if (input.includes("exit")) {
                 Deno.exit(1);
             }
 
