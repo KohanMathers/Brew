@@ -7,6 +7,8 @@ import {
     Identifier,
     VariableDeclaration,
     AssignmentExpression,
+    Property,
+    ObjectLiteral,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { ParseError } from "./errors.ts";
@@ -27,12 +29,16 @@ export default class Parser {
         return prev;
     }
 
-    private expect(type: TokenType) {
+    private expect(type: TokenType, error?: string) {
         const prev = this.tokens.shift() as Token;
         if (!prev || prev.type !== type) {
-            throw new ParseError(
-                `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`,
-            );
+            if (error) {
+                throw new ParseError(error);
+            } else {
+                throw new ParseError(
+                    `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`,
+                );
+            }
         }
 
         return prev;
@@ -65,7 +71,10 @@ export default class Parser {
 
     private parse_variable_declaration(): Stmt {
         const isConstant = this.next().type == TokenType.Const;
-        const identifier = this.expect(TokenType.Identifier).value;
+        const identifier = this.expect(
+            TokenType.Identifier,
+            "Expected variable name after declaration keyword.",
+        ).value;
 
         if (this.at().type == TokenType.Semicolon) {
             this.next();
@@ -82,7 +91,10 @@ export default class Parser {
             } as VariableDeclaration;
         }
 
-        this.expect(TokenType.Equals);
+        this.expect(
+            TokenType.Equals,
+            `Expected '=' after variable name '${identifier}'.`,
+        );
         const declaration = {
             kind: "VariableDeclaration",
             value: this.parse_expression(),
@@ -90,7 +102,10 @@ export default class Parser {
             constant: isConstant,
         } as VariableDeclaration;
 
-        this.expect(TokenType.Semicolon);
+        this.expect(
+            TokenType.Semicolon,
+            "Expected ';' after variable declaration.",
+        );
         return declaration;
     }
 
@@ -99,7 +114,7 @@ export default class Parser {
     }
 
     private parse_assignment_Expression(): Expression {
-        const left = this.parse_additive_expression();
+        const left = this.parse_object_expression();
 
         if (this.at().type == TokenType.Equals) {
             this.next();
@@ -111,6 +126,54 @@ export default class Parser {
             } as AssignmentExpression;
         }
         return left;
+    }
+
+    private parse_object_expression(): Expression {
+        if (this.at().type != TokenType.OpenBrace)
+            return this.parse_additive_expression();
+
+        this.next();
+        const properties = new Array<Property>();
+
+        while (this.not_eof() && this.at().type != TokenType.CloseBrace) {
+            const key = this.expect(
+                TokenType.Identifier,
+                "Expected identifier as key in object literal.",
+            ).value;
+
+            if (this.at().type == TokenType.Comma) {
+                this.next();
+                properties.push({
+                    key,
+                    kind: "Property",
+                    value: undefined,
+                } as Property);
+                continue;
+            } else if (this.at().type == TokenType.CloseBrace) {
+                properties.push({ key, kind: "Property", value: undefined });
+                continue;
+            }
+
+            this.expect(
+                TokenType.Colon,
+                "Expected ':' after key in object literal.",
+            );
+            const value = this.parse_expression();
+
+            properties.push({ kind: "Property", value, key });
+            if (this.at().type != TokenType.CloseBrace) {
+                this.expect(
+                    TokenType.Comma,
+                    "Expected comma or closing brace following property.",
+                );
+            }
+        }
+
+        this.expect(
+            TokenType.CloseBrace,
+            `Expected '}' to close object literal, found '${this.at().value}'.`,
+        );
+        return { kind: "ObjectLiteral", properties } as ObjectLiteral;
     }
 
     private parse_additive_expression(): Expression {
@@ -166,7 +229,10 @@ export default class Parser {
             case TokenType.OpenParen: {
                 this.next();
                 const value = this.parse_expression();
-                this.expect(TokenType.CloseParen);
+                this.expect(
+                    TokenType.CloseParen,
+                    "Expected closing ')' after expression.",
+                );
                 return value;
             }
 
