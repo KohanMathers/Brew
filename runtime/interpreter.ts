@@ -1,11 +1,6 @@
-import {
-    ValueType as _ValueType,
-    RuntimeValue,
-    NumberValue,
-} from "./values.ts";
+import { RuntimeValue, NumberValue } from "./values.ts";
 
 import {
-    NodeType as _NodeType,
     Stmt,
     Program,
     BinaryExpression,
@@ -31,6 +26,9 @@ import {
     EvaluateObjectExpression,
 } from "../frontend/eval/expressions.ts";
 
+/**
+ * Evaluates the AST node in the given env
+ */
 export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
     switch (astNode.kind) {
         case "NumericLiteral":
@@ -38,21 +36,28 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 type: "number",
                 value: (astNode as NumericLiteral).value,
             } as NumberValue;
+
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
+
         case "ObjectLiteral":
             return EvaluateObjectExpression(astNode as ObjectLiteral, env);
+
         case "AssignmentExpression":
             return EvaluateAssignment(astNode as AssignmentExpression, env);
+
         case "BinaryExpression":
             return EvaluateBinaryExpression(astNode as BinaryExpression, env);
+
         case "Program":
             return EvaluateProgram(astNode as Program, env);
+
         case "VariableDeclaration":
             return EvaluateVariableDeclaration(
                 astNode as VariableDeclaration,
                 env,
             );
+
         default:
             throw new InterpretError(
                 `The following AST node has not yet been setup for interpretation: ${astNode.kind}`,

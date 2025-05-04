@@ -15,23 +15,60 @@ import {
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { ParseError } from "./errors.ts";
 
+/**
+ * Parser class for turning tokens into an Abstract Syntax Tree
+ */
 export default class Parser {
     private tokens: Token[] = [];
 
-    private not_eof(): boolean {
+    /**
+     * Turns source code into an AST
+     * @param sourceCode The source code to parse
+     * @returns A Program node representing the AST
+     */
+    public ProduceAST(sourceCode: string): Program {
+        this.tokens = tokenize(sourceCode);
+
+        const program: Program = {
+            kind: "Program",
+            body: [],
+        };
+
+        while (this.NotEOF()) {
+            program.body.push(this.ParseStatement());
+        }
+
+        return program;
+    }
+
+    // ===== Token Management Methods =====
+
+    /**
+     * Checks if there are still tokens left to process
+     */
+    private NotEOF(): boolean {
         return this.tokens[0].type != TokenType.EOF;
     }
 
-    private at() {
+    /**
+     * Returns the current token without consuming it
+     */
+    private At(): Token {
         return this.tokens[0] as Token;
     }
 
-    private next() {
+    /**
+     * Consumes and returns the current token
+     */
+    private Next(): Token {
         const prev = this.tokens.shift() as Token;
         return prev;
     }
 
-    private expect(type: TokenType, error?: string) {
+    /**
+     * Expects a specific token type and throws an error if not matched
+     */
+    private Expect(type: TokenType, error?: string): Token {
         const prev = this.tokens.shift() as Token;
         if (!prev || prev.type !== type) {
             if (error) {
@@ -46,40 +83,33 @@ export default class Parser {
         return prev;
     }
 
-    public ProduceAST(sourceCode: string): Program {
-        this.tokens = tokenize(sourceCode);
+    // ===== Statement Parsing Methods =====
 
-        const program: Program = {
-            kind: "Program",
-            body: [],
-        };
-
-        while (this.not_eof()) {
-            program.body.push(this.parse_stmt());
-        }
-
-        return program;
-    }
-
-    private parse_stmt(): Stmt {
-        switch (this.at().type) {
+    /**
+     * Parses a statement
+     */
+    private ParseStatement(): Stmt {
+        switch (this.At().type) {
             case TokenType.Let:
             case TokenType.Const:
-                return this.parse_variable_declaration();
+                return this.ParseVariableDeclaration();
             default:
-                return this.parse_expression();
+                return this.ParseExpression();
         }
     }
 
-    private parse_variable_declaration(): Stmt {
-        const isConstant = this.next().type == TokenType.Const;
-        const identifier = this.expect(
+    /**
+     * Parses a variable declaration
+     */
+    private ParseVariableDeclaration(): Stmt {
+        const isConstant = this.Next().type == TokenType.Const;
+        const identifier = this.Expect(
             TokenType.Identifier,
             "Expected variable name after declaration keyword.",
         ).value;
 
-        if (this.at().type == TokenType.Semicolon) {
-            this.next();
+        if (this.At().type == TokenType.Semicolon) {
+            this.Next();
             if (isConstant) {
                 throw new ParseError(
                     `Must assign value to consant expression ${identifier}. No value provided.`,
@@ -93,34 +123,42 @@ export default class Parser {
             } as VariableDeclaration;
         }
 
-        this.expect(
+        this.Expect(
             TokenType.Equals,
             `Expected '=' after variable name '${identifier}'.`,
         );
         const declaration = {
             kind: "VariableDeclaration",
-            value: this.parse_expression(),
+            value: this.ParseExpression(),
             identifier,
             constant: isConstant,
         } as VariableDeclaration;
 
-        this.expect(
+        this.Expect(
             TokenType.Semicolon,
             "Expected ';' after variable declaration.",
         );
         return declaration;
     }
 
-    private parse_expression(): Expression {
-        return this.parse_assignment_Expression();
+    // ===== Expression Parsing Methods =====
+
+    /**
+     * Entry point for parsing expressions
+     */
+    private ParseExpression(): Expression {
+        return this.ParseAssignmentExpression();
     }
 
-    private parse_assignment_Expression(): Expression {
-        const left = this.parse_object_expression();
+    /**
+     * Parses assignment expressions
+     */
+    private ParseAssignmentExpression(): Expression {
+        const left = this.ParseObjectExpression();
 
-        if (this.at().type == TokenType.Equals) {
-            this.next();
-            const value = this.parse_assignment_Expression();
+        if (this.At().type == TokenType.Equals) {
+            this.Next();
+            const value = this.ParseAssignmentExpression();
             return {
                 value,
                 assignee: left,
@@ -130,60 +168,66 @@ export default class Parser {
         return left;
     }
 
-    private parse_object_expression(): Expression {
-        if (this.at().type != TokenType.OpenBrace)
-            return this.parse_additive_expression();
+    /**
+     * Parses object literals
+     */
+    private ParseObjectExpression(): Expression {
+        if (this.At().type != TokenType.OpenBrace)
+            return this.ParseAdditiveExpression();
 
-        this.next();
+        this.Next();
         const properties = new Array<Property>();
 
-        while (this.not_eof() && this.at().type != TokenType.CloseBrace) {
-            const key = this.expect(
+        while (this.NotEOF() && this.At().type != TokenType.CloseBrace) {
+            const key = this.Expect(
                 TokenType.Identifier,
                 "Expected identifier as key in object literal.",
             ).value;
 
-            if (this.at().type == TokenType.Comma) {
-                this.next();
+            if (this.At().type == TokenType.Comma) {
+                this.Next();
                 properties.push({
                     key,
                     kind: "Property",
                     value: undefined,
                 } as Property);
                 continue;
-            } else if (this.at().type == TokenType.CloseBrace) {
+            } else if (this.At().type == TokenType.CloseBrace) {
                 properties.push({ key, kind: "Property", value: undefined });
                 continue;
             }
 
-            this.expect(
+            this.Expect(
                 TokenType.Colon,
                 "Expected ':' after key in object literal.",
             );
-            const value = this.parse_expression();
+            const value = this.ParseExpression();
 
             properties.push({ kind: "Property", value, key });
-            if (this.at().type != TokenType.CloseBrace) {
-                this.expect(
+            if (this.At().type != TokenType.CloseBrace) {
+                this.Expect(
                     TokenType.Comma,
                     "Expected comma or closing brace following property.",
                 );
             }
         }
 
-        this.expect(
+        this.Expect(
             TokenType.CloseBrace,
-            `Expected '}' to close object literal, found '${this.at().value}'.`,
+            `Expected '}' to close object literal, found '${this.At().value}'.`,
         );
         return { kind: "ObjectLiteral", properties } as ObjectLiteral;
     }
 
-    private parse_additive_expression(): Expression {
-        let left = this.parse_multiplicative_expression();
+    /**
+     * Parses additive expressions (+, -)
+     */
+    private ParseAdditiveExpression(): Expression {
+        let left = this.ParseMultiplicativeExpression();
 
-        while (this.at().value == "+" || this.at().value == "-") {
-            const operator = this.next().value;
-            const right = this.parse_multiplicative_expression();
+        while (this.At().value == "+" || this.At().value == "-") {
+            const operator = this.Next().value;
+            const right = this.ParseMultiplicativeExpression();
             left = {
                 kind: "BinaryExpression",
                 left,
@@ -194,16 +238,19 @@ export default class Parser {
         return left;
     }
 
-    private parse_multiplicative_expression(): Expression {
-        let left = this.parse_call_member_expression();
+    /**
+     * Parses multiplicative expressions (*, /, %)
+     */
+    private ParseMultiplicativeExpression(): Expression {
+        let left = this.ParseCallMemberExpression();
 
         while (
-            this.at().value == "*" ||
-            this.at().value == "/" ||
-            this.at().value == "%"
+            this.At().value == "*" ||
+            this.At().value == "/" ||
+            this.At().value == "%"
         ) {
-            const operator = this.next().value;
-            const right = this.parse_call_member_expression();
+            const operator = this.Next().value;
+            const right = this.ParseCallMemberExpression();
             left = {
                 kind: "BinaryExpression",
                 left,
@@ -214,68 +261,83 @@ export default class Parser {
         return left;
     }
 
-    private parse_call_member_expression(): Expression {
-        const member = this.parse_member_expression();
+    /**
+     * Parses function call and member expressions
+     */
+    private ParseCallMemberExpression(): Expression {
+        const member = this.ParseMemberExpression();
 
-        if (this.at().type == TokenType.OpenParen) {
-            return this.parse_call_expression(member);
+        if (this.At().type == TokenType.OpenParen) {
+            return this.ParseCallExpression(member);
         }
 
         return member;
     }
 
-    private parse_call_expression(caller: Expression): Expression {
-        let call_expression: Expression = {
+    /**
+     * Parses function call expressions
+     */
+    private ParseCallExpression(caller: Expression): Expression {
+        let callExpression: Expression = {
             kind: "CallExpression",
             caller,
-            args: this.parse_args(),
+            args: this.ParseArgs(),
         } as CallExpression;
 
-        if (this.at().type == TokenType.OpenParen) {
-            call_expression = this.parse_call_expression(call_expression);
+        if (this.At().type == TokenType.OpenParen) {
+            callExpression = this.ParseCallExpression(callExpression);
         }
 
-        return call_expression;
+        return callExpression;
     }
 
-    private parse_args(): Expression[] {
-        this.expect(TokenType.OpenParen);
+    /**
+     * Parses function arguments
+     */
+    private ParseArgs(): Expression[] {
+        this.Expect(TokenType.OpenParen);
         const args =
-            this.at().type == TokenType.CloseParen
+            this.At().type == TokenType.CloseParen
                 ? []
-                : this.parse_arguments_list();
+                : this.ParseArgumentsList();
 
-        this.expect(
+        this.Expect(
             TokenType.CloseParen,
             "Missing closing parenthesis inside arguments list.",
         );
         return args;
     }
 
-    private parse_arguments_list(): Expression[] {
-        const args = [this.parse_assignment_Expression()];
+    /**
+     * Parses a list of function arguments
+     */
+    private ParseArgumentsList(): Expression[] {
+        const args = [this.ParseAssignmentExpression()];
 
-        while (this.at().type == TokenType.Comma && this.next()) {
-            args.push(this.parse_assignment_Expression());
+        while (this.At().type == TokenType.Comma && this.Next()) {
+            args.push(this.ParseAssignmentExpression());
         }
 
         return args;
     }
 
-    private parse_member_expression(): Expression {
-        let object = this.parse_primary_expression();
+    /**
+     * Parses member expressions (obj.prop or obj[prop])
+     */
+    private ParseMemberExpression(): Expression {
+        let object = this.ParsePrimaryExpression();
 
         while (
-            this.at().type == TokenType.Dot ||
-            this.at().type == TokenType.OpenBracket
+            this.At().type == TokenType.Dot ||
+            this.At().type == TokenType.OpenBracket
         ) {
-            const operator = this.next();
+            const operator = this.Next();
             let property: Expression;
             let computed: boolean;
 
             if (operator.type == TokenType.Dot) {
                 computed = false;
-                property = this.parse_primary_expression();
+                property = this.ParsePrimaryExpression();
 
                 if (property.kind != "Identifier") {
                     throw new ParseError(
@@ -284,8 +346,8 @@ export default class Parser {
                 }
             } else {
                 computed = true;
-                property = this.parse_expression();
-                this.expect(
+                property = this.ParseExpression();
+                this.Expect(
                     TokenType.CloseBracket,
                     "Missing closing bracket in computed value.",
                 );
@@ -302,24 +364,29 @@ export default class Parser {
         return object;
     }
 
-    private parse_primary_expression(): Expression {
-        const token = this.at().type;
+    /**
+     * Parses primary expressions (identifiers, literals, grouped expressions)
+     */
+    private ParsePrimaryExpression(): Expression {
+        const token = this.At().type;
 
         switch (token) {
             case TokenType.Identifier:
                 return {
                     kind: "Identifier",
-                    symbol: this.next().value,
+                    symbol: this.Next().value,
                 } as Identifier;
+
             case TokenType.Number:
                 return {
                     kind: "NumericLiteral",
-                    value: parseFloat(this.next().value),
+                    value: parseFloat(this.Next().value),
                 } as NumericLiteral;
+
             case TokenType.OpenParen: {
-                this.next();
-                const value = this.parse_expression();
-                this.expect(
+                this.Next();
+                const value = this.ParseExpression();
+                this.Expect(
                     TokenType.CloseParen,
                     "Expected closing ')' after expression.",
                 );
@@ -328,7 +395,7 @@ export default class Parser {
 
             default:
                 throw new ParseError(
-                    `Unexpected token found while parsing: { type: ${TokenType[this.at().type]}, value: ${this.at().value} }`,
+                    `Unexpected token found while parsing: { type: ${TokenType[this.At().type]}, value: ${this.At().value} }`,
                 );
         }
     }

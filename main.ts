@@ -1,17 +1,23 @@
+// deno-lint-ignore-file no-unused-vars
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
-import { createGlobalEnv } from "./runtime/environment.ts";
-//repl();
-run("./test.txt");
+import { CreateGlobalEnv } from "./runtime/environment.ts";
 
-async function run(filename: string) {
+// Choose what to run - REPL for dev stuff, Run() for script files
+// Repl();
+Run("./test.txt");
+
+/**
+ * Runs whatever code is inside the given file
+ * @param filename path to the file you wanna run
+ */
+async function Run(filename: string) {
     const parser = new Parser();
-    const env = createGlobalEnv();
+    const env = CreateGlobalEnv();
+
     try {
         const input = await Deno.readTextFile(filename);
-
         const program = parser.ProduceAST(input);
-
         const result = Evaluate(program, env);
         console.log(result);
     } catch (error) {
@@ -23,10 +29,15 @@ async function run(filename: string) {
     }
 }
 
-function _repl() {
+/**
+ * REPL mode — for messing around with PaperBag live
+ */
+function Repl() {
     const parser = new Parser();
-    const env = createGlobalEnv();
+    const env = CreateGlobalEnv();
+
     console.log("\nPaperBag Repl v0.1");
+
     while (true) {
         try {
             const input = prompt("> ");
@@ -38,7 +49,6 @@ function _repl() {
             }
 
             const program = parser.ProduceAST(input);
-
             const result = Evaluate(program, env);
             console.log(result);
         } catch (error) {
