@@ -1,3 +1,6 @@
 let foo = 45 / 2;
 
-const object = { x: 100, y: 50, foo, complex: { bar: true }, };
+const object = { x: 100, y: 50, foo, complex: { bar: true } };
+
+let f = object.complex.bar;
+foo = object.foo() + 5
