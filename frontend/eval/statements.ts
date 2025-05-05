@@ -47,8 +47,7 @@ export function EvaluateVariableDeclaration(
 
 /**
  * Evaluates a function declaration
- * Evaluates the initial value of a variable and declares it in the environment.
- * If no value is provided, the variable is assigned null.
+ * Creates a function object and declares it in the given env
  */
 export function EvaluateFunctionDeclaration(
     declaration: FunctionDeclaration,
