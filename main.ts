@@ -4,8 +4,8 @@ import { Evaluate } from "./runtime/interpreter.ts";
 import { CreateGlobalEnv } from "./runtime/environment.ts";
 
 // Choose what to run - REPL for dev stuff, Run() for script files
-// Repl();
-Run("./test.txt");
+Repl();
+// Run("./test.txt");
 
 /**
  * Runs whatever code is inside the given file
@@ -18,8 +18,7 @@ async function Run(filename: string) {
     try {
         const input = await Deno.readTextFile(filename);
         const program = parser.ProduceAST(input);
-        const result = Evaluate(program, env);
-        //console.log(result);
+        Evaluate(program, env);
     } catch (error) {
         if (error instanceof Error) {
             console.error(`${error.name}: ${error.message}`);
@@ -49,8 +48,7 @@ function Repl() {
             }
 
             const program = parser.ProduceAST(input);
-            const result = Evaluate(program, env);
-            console.log(result);
+            Evaluate(program, env);
         } catch (error) {
             if (error instanceof Error) {
                 console.error(`${error.name}: ${error.message}`);
