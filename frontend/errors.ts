@@ -64,3 +64,12 @@ export class AssignmentError extends CustomError {
         super(message);
     }
 }
+
+/**
+ * Thrown when a function call fails
+ */
+export class FunctionError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
