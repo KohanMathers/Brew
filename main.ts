@@ -19,7 +19,7 @@ async function Run(filename: string) {
         const input = await Deno.readTextFile(filename);
         const program = parser.ProduceAST(input);
         const result = Evaluate(program, env);
-        console.log(result);
+        //console.log(result);
     } catch (error) {
         if (error instanceof Error) {
             console.error(`${error.name}: ${error.message}`);

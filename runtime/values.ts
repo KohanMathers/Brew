@@ -1,7 +1,14 @@
+import Environment from "./environment.ts";
+
 /**
  * Possible runtime value types
  */
-export type ValueType = "null" | "number" | "boolean" | "object";
+export type ValueType =
+    | "null"
+    | "number"
+    | "boolean"
+    | "object"
+    | "internal-call";
 
 /**
  * Base interface for all runtime values
@@ -43,6 +50,19 @@ export interface ObjectValue extends RuntimeValue {
 }
 
 /**
+ * Internal calls in the language (e.g. print())
+ */
+
+export type FunctionCall = (
+    args: RuntimeValue[],
+    env: Environment,
+) => RuntimeValue;
+export interface InternalCallValue extends RuntimeValue {
+    type: "internal-call";
+    call: FunctionCall;
+}
+
+/**
  * Creates a number value
  */
 export function MakeNumber(n = 0) {
@@ -61,4 +81,11 @@ export function MakeNull() {
  */
 export function MakeBool(b = true) {
     return { type: "boolean", value: b } as BoolValue;
+}
+
+/**
+ * Creates an internal call
+ */
+export function MakeInternalCall(call: FunctionCall) {
+    return { type: "internal-call", call } as InternalCallValue;
 }

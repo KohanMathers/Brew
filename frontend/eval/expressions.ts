@@ -4,15 +4,17 @@ import {
     RuntimeValue,
     MakeNull,
     ObjectValue,
+    InternalCallValue,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
     BinaryExpression,
+    CallExpression,
     Identifier,
     ObjectLiteral,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
-import { AssignmentError, CalculationError } from "../errors.ts";
+import { AssignmentError, CalculationError, FunctionError } from "../errors.ts";
 
 /**
  * Evaluates a binary expression
@@ -114,6 +116,29 @@ export function EvaluateObjectExpression(
         object.properties.set(key, runtimeValue);
     }
     return object;
+}
+
+/**
+ * Evaluates a call expression
+ * Evaluates all properties of an object and stores them in a map.
+ * Handles both evaluated properties and variables from the environment.
+ */
+export function EvaluateCallExpression(
+    expression: CallExpression,
+    env: Environment,
+): RuntimeValue {
+    const args = expression.args.map((arg) => Evaluate(arg, env));
+    const func = Evaluate(expression.caller, env);
+
+    if (func.type != "internal-call") {
+        throw new FunctionError(
+            `Cannot call value that is not a function: ${JSON.stringify(func)}`,
+        );
+    }
+
+    const result = (func as InternalCallValue).call(args, env);
+
+    return result;
 }
 
 /**

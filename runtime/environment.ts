@@ -4,7 +4,13 @@ import {
     AssignmentError,
 } from "../frontend/errors.ts";
 
-import { MakeBool, MakeNull, RuntimeValue } from "./values.ts";
+import {
+    MakeBool,
+    MakeInternalCall,
+    MakeNull,
+    MakeNumber,
+    RuntimeValue,
+} from "./values.ts";
 
 /**
  * Sets up the base env with null/true/false preloaded
@@ -14,6 +20,20 @@ export function CreateGlobalEnv() {
     env.declareVariable("null", MakeNull(), true);
     env.declareVariable("true", MakeBool(true), true);
     env.declareVariable("false", MakeBool(false), true);
+
+    env.declareVariable(
+        "print",
+        MakeInternalCall((args, scope) => {
+            console.log(...args);
+            return MakeNull();
+        }),
+        true,
+    );
+
+    function TimeFunction(_args: RuntimeValue[], _env: Environment) {
+        return MakeNumber(Date.now());
+    }
+    env.declareVariable("time", MakeInternalCall(TimeFunction), true);
 
     return env;
 }

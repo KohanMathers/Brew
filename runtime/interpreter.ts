@@ -9,6 +9,7 @@ import {
     VariableDeclaration,
     AssignmentExpression,
     ObjectLiteral,
+    CallExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -22,6 +23,7 @@ import {
 import {
     EvaluateAssignment,
     EvaluateBinaryExpression,
+    EvaluateCallExpression,
     EvaluateIdentifier,
     EvaluateObjectExpression,
 } from "../frontend/eval/expressions.ts";
@@ -42,6 +44,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
 
         case "ObjectLiteral":
             return EvaluateObjectExpression(astNode as ObjectLiteral, env);
+
+        case "CallExpression":
+            return EvaluateCallExpression(astNode as CallExpression, env);
 
         case "AssignmentExpression":
             return EvaluateAssignment(astNode as AssignmentExpression, env);
