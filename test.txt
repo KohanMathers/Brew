@@ -2,3 +2,5 @@ let foo = 45 / 2;
 
 print(foo, 45)
 print(time())
+
+nat(42)
