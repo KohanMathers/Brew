@@ -119,9 +119,10 @@ export function EvaluateObjectExpression(
 }
 
 /**
- * Evaluates a call expression
- * Evaluates all properties of an object and stores them in a map.
- * Handles both evaluated properties and variables from the environment.
+ * Evaluates a function call expression.
+ * Resolves and evaluates all arguments.
+ * Verifies the function is callable.
+ * Invokes the function and returns the result.
  */
 export function EvaluateCallExpression(
     expression: CallExpression,
