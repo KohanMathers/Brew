@@ -8,9 +8,10 @@ import {
     MakeBool,
     MakeInternalCall,
     MakeNull,
-    MakeNumber,
     RuntimeValue,
 } from "./values.ts";
+
+import { TimeFunction, PrintFunction } from "./functions.ts";
 
 /**
  * Sets up the base env with null/true/false preloaded
@@ -21,18 +22,8 @@ export function CreateGlobalEnv() {
     env.declareVariable("true", MakeBool(true), true);
     env.declareVariable("false", MakeBool(false), true);
 
-    env.declareVariable(
-        "print",
-        MakeInternalCall((args, _scope) => {
-            console.log(...args);
-            return MakeNull();
-        }),
-        true,
-    );
+    env.declareVariable("print", MakeInternalCall(PrintFunction), true);
 
-    function TimeFunction(_args: RuntimeValue[], _env: Environment) {
-        return MakeNumber(Date.now());
-    }
     env.declareVariable("time", MakeInternalCall(TimeFunction), true);
 
     return env;
