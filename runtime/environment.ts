@@ -23,7 +23,7 @@ export function CreateGlobalEnv() {
 
     env.declareVariable(
         "print",
-        MakeInternalCall((args, scope) => {
+        MakeInternalCall((args, _scope) => {
             console.log(...args);
             return MakeNull();
         }),
