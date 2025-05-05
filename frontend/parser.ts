@@ -4,6 +4,7 @@ import {
     Expression,
     BinaryExpression,
     NumericLiteral,
+    StringLiteral,
     Identifier,
     VariableDeclaration,
     FunctionDeclaration,
@@ -438,6 +439,12 @@ export default class Parser {
                 );
                 return value;
             }
+
+            case TokenType.String:
+                return {
+                    kind: "StringLiteral",
+                    value: this.Next().value,
+                } as StringLiteral;
 
             default:
                 throw new ParseError(

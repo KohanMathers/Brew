@@ -1,3 +1,5 @@
+import { ParseError } from "./errors.ts";
+
 /**
  * Token interface - represents a basic unit in the source code
  */
@@ -17,6 +19,7 @@ export enum TokenType {
     Comma,
     Dot,
     Colon,
+    Quotation,
     Semicolon,
     OpenParen,
     CloseParen,
@@ -27,6 +30,7 @@ export enum TokenType {
     BinaryOperator,
     Let,
     Const,
+    String,
     EOF,
 }
 
@@ -71,13 +75,80 @@ function IsSkippable(src: string): boolean {
 }
 
 /**
+ * Processes strings
+ */
+function ProcessStringLiteral(src: string[]): {
+    value: string;
+    remaining: string[];
+} {
+    const quote = src.shift();
+    let string = "";
+
+    // Read characters until we find the closing quote
+    while (src.length > 0 && src[0] !== quote) {
+        // Check for unterminated string (newline without closing quote)
+        if (src[0] === "\n" || src[0] === "\r") {
+            throw new ParseError(
+                "Unterminated string literal: newline found before closing quote",
+            );
+        }
+
+        // Handle escape sequences
+        if (src[0] === "\\") {
+            src.shift(); // Skip the backslash
+
+            // Handle common escape sequences
+            if (src.length > 0) {
+                const escapeChar = src.shift();
+                switch (escapeChar) {
+                    case "n":
+                        string += "\n";
+                        break;
+                    case "t":
+                        string += "\t";
+                        break;
+                    case "r":
+                        string += "\r";
+                        break;
+                    case "\\":
+                        string += "\\";
+                        break;
+                    case "'":
+                        string += "'";
+                        break;
+                    case '"':
+                        string += '"';
+                        break;
+                    default:
+                        string += escapeChar; // For any other escape sequence
+                }
+            }
+        } else {
+            string += src.shift();
+        }
+    }
+
+    // Make sure we found the closing quote
+    if (src.length === 0) {
+        throw new ParseError(
+            "Unterminated string literal: reached end of file before closing quote",
+        );
+    }
+
+    // Consume the closing quote
+    src.shift();
+
+    return { value: string, remaining: src };
+}
+
+/**
  * Tokenizes source code into an array of tokens
  * @param sourceCode The source code to tokenize
  * @returns An array of tokens
  */
 export function tokenize(sourceCode: string): Token[] {
     const tokens = new Array<Token>();
-    const src = sourceCode.split("");
+    let src = sourceCode.split("");
 
     // Process each character in the source code
     while (src.length > 0) {
@@ -108,6 +179,10 @@ export function tokenize(sourceCode: string): Token[] {
             tokens.push(CreateToken(src.shift(), TokenType.Semicolon));
         } else if (src[0] == ":") {
             tokens.push(CreateToken(src.shift(), TokenType.Colon));
+        } else if (src[0] == '"' || src[0] == "'") {
+            const { value, remaining } = ProcessStringLiteral(src);
+            src = remaining;
+            tokens.push(CreateToken(value, TokenType.String));
         } else if (src[0] == ",") {
             tokens.push(CreateToken(src.shift(), TokenType.Comma));
         } else if (src[0] == ".") {

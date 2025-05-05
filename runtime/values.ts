@@ -7,6 +7,7 @@ import Environment from "./environment.ts";
 export type ValueType =
     | "null"
     | "number"
+    | "string"
     | "boolean"
     | "object"
     | "internal-call"
@@ -33,6 +34,14 @@ export interface NullValue extends RuntimeValue {
 export interface NumberValue extends RuntimeValue {
     type: "number";
     value: number;
+}
+
+/**
+ * String value type in the language
+ */
+export interface StringValue extends RuntimeValue {
+    type: "string";
+    value: string;
 }
 
 /**
@@ -102,4 +111,11 @@ export function MakeBool(b = true) {
  */
 export function MakeInternalCall(call: FunctionCall) {
     return { type: "internal-call", call } as InternalCallValue;
+}
+
+/**
+ * Creates a string value
+ */
+export function MakeString(s = "") {
+    return { type: "string", value: s } as StringValue;
 }

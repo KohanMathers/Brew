@@ -4,6 +4,7 @@ import {
     MakeNumber,
     NumberValue,
     RuntimeValue,
+    StringValue,
 } from "./values.ts";
 
 /**
@@ -19,6 +20,8 @@ export function TimeFunction() {
 export function PrintFunction(args: RuntimeValue[]): RuntimeValue {
     const values = args.map((arg) => {
         switch (arg.type) {
+            case "string":
+                return (arg as StringValue).value;
             case "number":
                 return (arg as NumberValue).value;
             case "boolean":
@@ -28,6 +31,7 @@ export function PrintFunction(args: RuntimeValue[]): RuntimeValue {
             case "object":
                 return "{object}";
             case "internal-call":
+            case "function":
                 return "{function}";
             default:
                 return arg;
@@ -56,6 +60,9 @@ export function NatFunction(args: RuntimeValue[]): RuntimeValue {
     let input: string;
 
     switch (arg.type) {
+        case "string":
+            input = (arg as StringValue).value;
+            break;
         case "number":
             input = String((arg as NumberValue).value);
             break;

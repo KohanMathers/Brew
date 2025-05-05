@@ -6,6 +6,9 @@ import {
     ObjectValue,
     InternalCallValue,
     FunctionValue,
+    BoolValue,
+    MakeString,
+    StringValue,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
@@ -28,6 +31,25 @@ export function EvaluateBinaryExpression(
 ): RuntimeValue {
     const left = Evaluate(binop.left, env);
     const right = Evaluate(binop.right, env);
+
+    // Handle string concatenation
+    if (
+        binop.operator === "+" &&
+        (left.type === "string" || right.type === "string")
+    ) {
+        // Convert values to strings for concatenation
+        const leftStr =
+            left.type === "string"
+                ? (left as StringValue).value
+                : valueToString(left);
+
+        const rightStr =
+            right.type === "string"
+                ? (right as StringValue).value
+                : valueToString(right);
+
+        return MakeString(leftStr + rightStr);
+    }
 
     // Check if both operands are numbers before evaluating the binary operation
     if (left.type === "number" && right.type === "number") {
@@ -178,4 +200,28 @@ export function EvaluateAssignment(
 
     const varname = (node.assignee as Identifier).symbol;
     return env.assignVariable(varname, Evaluate(node.value, env));
+}
+
+/**
+ * Helper function to convert runtime values to strings
+ */
+
+function valueToString(value: RuntimeValue): string {
+    switch (value.type) {
+        case "string":
+            return (value as StringValue).value;
+        case "number":
+            return (value as NumberValue).value.toString();
+        case "boolean":
+            return (value as BoolValue).value.toString();
+        case "null":
+            return "null";
+        case "object":
+            return "[object]";
+        case "function":
+        case "internal-call":
+            return "[function]";
+        default:
+            return "[unknown]";
+    }
 }

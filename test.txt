@@ -1,3 +1,9 @@
+const name = "World";
+
+function greet(who) {
+    print("Hello, " + who + "!")
+}
+
 function makeAdder(offset) {
     function add (x, y) {
         x + y + offset
@@ -8,3 +14,7 @@ function makeAdder(offset) {
 
 const adder = makeAdder(10);
 print(adder(5, 5))
+
+nat("save")
+
+greet(name)

@@ -1,4 +1,4 @@
-import { RuntimeValue, NumberValue } from "./values.ts";
+import { RuntimeValue, NumberValue, StringValue } from "./values.ts";
 
 import {
     Stmt,
@@ -11,6 +11,7 @@ import {
     ObjectLiteral,
     CallExpression,
     FunctionDeclaration,
+    StringLiteral,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -40,6 +41,12 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 type: "number",
                 value: (astNode as NumericLiteral).value,
             } as NumberValue;
+
+        case "StringLiteral":
+            return {
+                type: "string",
+                value: (astNode as StringLiteral).value,
+            } as StringValue;
 
         case "Identifier":
             return EvaluateIdentifier(astNode as Identifier, env);
