@@ -36,7 +36,7 @@ function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    console.log("\nPaperBag Repl v0.1");
+    console.log("\nPaperBag Repl v1.0");
 
     while (true) {
         try {
