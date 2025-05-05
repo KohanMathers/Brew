@@ -10,12 +10,14 @@ import {
     AssignmentExpression,
     ObjectLiteral,
     CallExpression,
+    FunctionDeclaration,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
 
 import {
+    EvaluateFunctionDeclaration,
     EvaluateProgram,
     EvaluateVariableDeclaration,
 } from "../frontend/eval/statements.ts";
@@ -60,6 +62,12 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
         case "VariableDeclaration":
             return EvaluateVariableDeclaration(
                 astNode as VariableDeclaration,
+                env,
+            );
+
+        case "FunctionDeclaration":
+            return EvaluateFunctionDeclaration(
+                astNode as FunctionDeclaration,
                 env,
             );
 

@@ -1,6 +1,10 @@
-let foo = 45 / 2;
+function makeAdder(offset) {
+    function add (x, y) {
+        x + y + offset
+    }
 
-print(foo, 45)
-print(time())
+    add
+}
 
-nat(42)
+const adder = makeAdder(10);
+print(adder(5, 5))

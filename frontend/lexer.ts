@@ -12,6 +12,7 @@ export interface Token {
 export enum TokenType {
     Number,
     Identifier,
+    Function,
     Equals,
     Comma,
     Dot,
@@ -35,6 +36,7 @@ export enum TokenType {
 const KEYWORDS: Record<string, TokenType> = {
     let: TokenType.Let,
     const: TokenType.Const,
+    function: TokenType.Function,
 };
 
 /**

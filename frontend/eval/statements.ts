@@ -1,7 +1,7 @@
-import { Program, VariableDeclaration } from "../ast.ts";
+import { FunctionDeclaration, Program, VariableDeclaration } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import { Evaluate } from "../../runtime/interpreter.ts";
-import { MakeNull, RuntimeValue } from "../../runtime/values.ts";
+import { FunctionValue, MakeNull, RuntimeValue } from "../../runtime/values.ts";
 
 /**
  * Evaluates a program
@@ -43,4 +43,24 @@ export function EvaluateVariableDeclaration(
         value,
         declaration.constant,
     );
+}
+
+/**
+ * Evaluates a function declaration
+ * Evaluates the initial value of a variable and declares it in the environment.
+ * If no value is provided, the variable is assigned null.
+ */
+export function EvaluateFunctionDeclaration(
+    declaration: FunctionDeclaration,
+    env: Environment,
+): RuntimeValue {
+    const func = {
+        type: "function",
+        name: declaration.name,
+        parameters: declaration.parameters,
+        declarationEnv: env,
+        body: declaration.body,
+    } as FunctionValue;
+
+    return env.declareVariable(declaration.name, func, true);
 }

@@ -1,3 +1,4 @@
+import { Stmt } from "../frontend/ast.ts";
 import Environment from "./environment.ts";
 
 /**
@@ -8,7 +9,8 @@ export type ValueType =
     | "number"
     | "boolean"
     | "object"
-    | "internal-call";
+    | "internal-call"
+    | "function";
 
 /**
  * Base interface for all runtime values
@@ -60,6 +62,18 @@ export type FunctionCall = (
 export interface InternalCallValue extends RuntimeValue {
     type: "internal-call";
     call: FunctionCall;
+}
+
+/**
+ * User defined functions
+ */
+
+export interface FunctionValue extends RuntimeValue {
+    type: "function";
+    name: string;
+    parameters: string[];
+    declarationEnv: Environment;
+    body: Stmt[];
 }
 
 /**

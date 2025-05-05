@@ -6,6 +6,7 @@ import {
     NumericLiteral,
     Identifier,
     VariableDeclaration,
+    FunctionDeclaration,
     AssignmentExpression,
     Property,
     ObjectLiteral,
@@ -13,7 +14,7 @@ import {
     MemberExpression,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
-import { ParseError } from "./errors.ts";
+import { FunctionError, ParseError } from "./errors.ts";
 
 /**
  * Parser class for turning tokens into an Abstract Syntax Tree
@@ -93,6 +94,8 @@ export default class Parser {
             case TokenType.Let:
             case TokenType.Const:
                 return this.ParseVariableDeclaration();
+            case TokenType.Function:
+                return this.ParseFunctionDeclaration();
             default:
                 return this.ParseExpression();
         }
@@ -139,6 +142,49 @@ export default class Parser {
             "Expected ';' after variable declaration.",
         );
         return declaration;
+    }
+
+    /**
+     * Parses a function declaration
+     */
+    private ParseFunctionDeclaration(): Stmt {
+        this.Next();
+        const name = this.Expect(
+            TokenType.Identifier,
+            "Expected function name following keyword.",
+        ).value;
+        const args = this.ParseArgs();
+        const parameters: string[] = [];
+        for (const arg of args) {
+            if (arg.kind != "Identifier") {
+                throw new FunctionError(
+                    "Expected parameters inside function declaration to be of type string",
+                );
+            }
+
+            parameters.push((arg as Identifier).symbol);
+        }
+
+        this.Expect(
+            TokenType.OpenBrace,
+            "Expected function body following declaration.",
+        );
+
+        const body: Stmt[] = [];
+
+        while (this.NotEOF() && this.At().type != TokenType.CloseBrace) {
+            body.push(this.ParseStatement());
+        }
+
+        this.Expect(TokenType.CloseBrace);
+        const func = {
+            body,
+            name,
+            parameters,
+            kind: "FunctionDeclaration",
+        } as FunctionDeclaration;
+
+        return func;
     }
 
     // ===== Expression Parsing Methods =====

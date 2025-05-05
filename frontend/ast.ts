@@ -4,6 +4,7 @@
 export type NodeType =
     | "Program"
     | "VariableDeclaration"
+    | "FunctionDeclaration"
     | "AssignmentExpression"
     | "MemberExpression"
     | "CallExpression"
@@ -43,6 +44,17 @@ export interface VariableDeclaration extends Stmt {
     constant: boolean;
     identifier: string;
     value?: Expression;
+}
+
+/**
+ * Function declaration node
+ */
+export interface FunctionDeclaration extends Stmt {
+    kind: "FunctionDeclaration";
+    parameters: string[];
+    name: string;
+    body: Stmt[];
+    async: boolean;
 }
 
 // ===== Expression Nodes =====

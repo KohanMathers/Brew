@@ -5,6 +5,7 @@ import {
     MakeNull,
     ObjectValue,
     InternalCallValue,
+    FunctionValue,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
@@ -131,15 +132,32 @@ export function EvaluateCallExpression(
     const args = expression.args.map((arg) => Evaluate(arg, env));
     const func = Evaluate(expression.caller, env);
 
-    if (func.type != "internal-call") {
-        throw new FunctionError(
-            `Cannot call value that is not a function: ${JSON.stringify(func)}`,
-        );
+    if (func.type == "internal-call") {
+        const result = (func as InternalCallValue).call(args, env);
+        return result;
     }
 
-    const result = (func as InternalCallValue).call(args, env);
+    if (func.type == "function") {
+        const fn = func as FunctionValue;
+        const scope = new Environment(fn.declarationEnv);
 
-    return result;
+        for (let i = 0; i < fn.parameters.length; i++) {
+            const varname = fn.parameters[i];
+            scope.declareVariable(varname, args[i], false);
+        }
+
+        let result: RuntimeValue = MakeNull();
+
+        for (const stmt of fn.body) {
+            result = Evaluate(stmt, scope);
+        }
+
+        return result;
+    }
+
+    throw new FunctionError(
+        `Cannot call value that is not a function: ${JSON.stringify(func)}`,
+    );
 }
 
 /**
