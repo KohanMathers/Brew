@@ -85,6 +85,13 @@ export function NatFunction(args: RuntimeValue[]): RuntimeValue {
     let response: string;
     if (input.toLowerCase().includes("save")) {
         response = "Saving...Saved";
+    } else if (input.toLowerCase().includes("7")) {
+        response = `Nat says that "${input}" does not exist.`;
+    } else if (
+        input.toLowerCase().includes("4") ||
+        input.toLowerCase().includes("2")
+    ) {
+        response = `Nat says that "${input}" does exist.`;
     } else {
         response = `Nat doesn't understand "${input}", so she just smiles and nods as you yap away about it.`;
     }
