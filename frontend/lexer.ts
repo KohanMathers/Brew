@@ -84,20 +84,16 @@ function ProcessStringLiteral(src: string[]): {
     const quote = src.shift();
     let string = "";
 
-    // Read characters until we find the closing quote
     while (src.length > 0 && src[0] !== quote) {
-        // Check for unterminated string (newline without closing quote)
         if (src[0] === "\n" || src[0] === "\r") {
             throw new ParseError(
                 "Unterminated string literal: newline found before closing quote",
             );
         }
 
-        // Handle escape sequences
         if (src[0] === "\\") {
-            src.shift(); // Skip the backslash
+            src.shift();
 
-            // Handle common escape sequences
             if (src.length > 0) {
                 const escapeChar = src.shift();
                 switch (escapeChar) {
@@ -120,7 +116,7 @@ function ProcessStringLiteral(src: string[]): {
                         string += '"';
                         break;
                     default:
-                        string += escapeChar; // For any other escape sequence
+                        string += escapeChar;
                 }
             }
         } else {
@@ -128,14 +124,12 @@ function ProcessStringLiteral(src: string[]): {
         }
     }
 
-    // Make sure we found the closing quote
     if (src.length === 0) {
         throw new ParseError(
             "Unterminated string literal: reached end of file before closing quote",
         );
     }
 
-    // Consume the closing quote
     src.shift();
 
     return { value: string, remaining: src };
