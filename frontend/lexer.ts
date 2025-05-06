@@ -16,6 +16,12 @@ export enum TokenType {
     Identifier,
     Function,
     Equals,
+    EqualsEquals,
+    NotEquals,
+    LessThan,
+    GreaterThan,
+    LessThanOrEquals,
+    GreaterThanOrEquals,
     Comma,
     Dot,
     Colon,
@@ -167,6 +173,20 @@ export function tokenize(sourceCode: string): Token[] {
             src[0] == "%"
         ) {
             tokens.push(CreateToken(src.shift(), TokenType.BinaryOperator));
+        } else if (src[0] == "=" && src[1] == "=") {
+            tokens.push(CreateToken(src.shift(), TokenType.EqualsEquals));
+        } else if (src[0] == "!" && src[1] == "=") {
+            tokens.push(CreateToken(src.shift(), TokenType.NotEquals));
+        } else if (src[0] == "<" && src[1] == "=") {
+            tokens.push(CreateToken(src.shift(), TokenType.LessThanOrEquals));
+        } else if (src[0] == ">" && src[1] == "=") {
+            tokens.push(
+                CreateToken(src.shift(), TokenType.GreaterThanOrEquals),
+            );
+        } else if (src[0] == "<") {
+            tokens.push(CreateToken(src.shift(), TokenType.LessThan));
+        } else if (src[0] == ">") {
+            tokens.push(CreateToken(src.shift(), TokenType.GreaterThan));
         } else if (src[0] == "=") {
             tokens.push(CreateToken(src.shift(), TokenType.Equals));
         } else if (src[0] == ";") {
