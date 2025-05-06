@@ -12,6 +12,7 @@ import {
     CallExpression,
     FunctionDeclaration,
     StringLiteral,
+    ComparisonExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -26,6 +27,7 @@ import {
 import {
     EvaluateAssignment,
     EvaluateBinaryExpression,
+    EvaluateComparisonExpression,
     EvaluateCallExpression,
     EvaluateIdentifier,
     EvaluateObjectExpression,
@@ -62,6 +64,12 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
 
         case "BinaryExpression":
             return EvaluateBinaryExpression(astNode as BinaryExpression, env);
+
+        case "ComparisonExpression":
+            return EvaluateComparisonExpression(
+                astNode as ComparisonExpression,
+                env,
+            );
 
         case "Program":
             return EvaluateProgram(astNode as Program, env);

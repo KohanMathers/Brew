@@ -3,6 +3,7 @@ import {
     Program,
     Expression,
     BinaryExpression,
+    ComparisonExpression,
     NumericLiteral,
     StringLiteral,
     Identifier,
@@ -77,7 +78,11 @@ export default class Parser {
                 throw new ParseError(error);
             } else {
                 throw new ParseError(
-                    `Unexpected token found while parsing. Expected: ${TokenType[type]}, found: { type: ${TokenType[prev.type]}, value: ${prev.value} }`,
+                    `Unexpected token found while parsing. Expected: ${
+                        TokenType[type]
+                    }, found: { type: ${TokenType[prev.type]}, value: ${
+                        prev.value
+                    } }`,
                 );
             }
         }
@@ -220,7 +225,7 @@ export default class Parser {
      */
     private ParseObjectExpression(): Expression {
         if (this.At().type != TokenType.OpenBrace)
-            return this.ParseAdditiveExpression();
+            return this.ParseComparisonExpression();
 
         this.Next();
         const properties = new Array<Property>();
@@ -304,6 +309,32 @@ export default class Parser {
                 right,
                 operator,
             } as BinaryExpression;
+        }
+        return left;
+    }
+
+    /**
+     * Parses comparison expressions (==, !=, >, <, >=, <=)
+     */
+    private ParseComparisonExpression(): Expression {
+        let left = this.ParseAdditiveExpression();
+
+        while (
+            this.At().value == "==" ||
+            this.At().value == "!=" ||
+            this.At().value == ">=" ||
+            this.At().value == "<=" ||
+            this.At().value == ">" ||
+            this.At().value == "<"
+        ) {
+            const operator = this.Next().value;
+            const right = this.ParseAdditiveExpression();
+            left = {
+                kind: "ComparisonExpression",
+                left,
+                right,
+                operator,
+            } as ComparisonExpression;
         }
         return left;
     }
@@ -448,7 +479,9 @@ export default class Parser {
 
             default:
                 throw new ParseError(
-                    `Unexpected token found while parsing: { type: ${TokenType[this.At().type]}, value: ${this.At().value} }`,
+                    `Unexpected token found while parsing: { type: ${
+                        TokenType[this.At().type]
+                    }, value: ${this.At().value} }`,
                 );
         }
     }

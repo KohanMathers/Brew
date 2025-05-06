@@ -1,20 +1,15 @@
-const name = "World";
+let x = 5;
+let y = 10;
+print(x == y)
+print(x != y)
+print(x < y)
+print(x > y)
+print(x <= y)
+print(x >= y)
 
-function greet(who) {
-    print("Hello, " + who + "!")
-}
-
-function makeAdder(offset) {
-    function add (x, y) {
-        x + y + offset
-    }
-
-    add
-}
-
-const adder = makeAdder(10);
-print(adder(5, 5))
-
-nat("save")
-
-greet(name)
+let a = "hello";
+let b = "world";
+print(a == a)
+print(a != b)
+print(a < b)
+print(a > b)

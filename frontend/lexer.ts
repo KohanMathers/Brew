@@ -145,7 +145,6 @@ export function tokenize(sourceCode: string): Token[] {
     const tokens = new Array<Token>();
     let src = sourceCode.split("");
 
-    // Process each character in the source code
     while (src.length > 0) {
         // Handle single-character tokens
         if (src[0] == "(") {
@@ -168,10 +167,40 @@ export function tokenize(sourceCode: string): Token[] {
             src[0] == "%"
         ) {
             tokens.push(CreateToken(src.shift(), TokenType.BinaryOperator));
-        } else if (src[0] == "==") {
-            tokens.push(CreateToken(src.shift(), TokenType.Comparison));
         } else if (src[0] == "=") {
-            tokens.push(CreateToken(src.shift(), TokenType.Equals));
+            // Check if it's == (comparison) or = (assignment)
+            if (src.length > 1 && src[1] == "=") {
+                src.shift();
+                src.shift();
+                tokens.push(CreateToken("==", TokenType.Comparison));
+            } else {
+                tokens.push(CreateToken(src.shift(), TokenType.Equals));
+            }
+        } else if (src[0] == "!") {
+            if (src.length > 1 && src[1] == "=") {
+                src.shift();
+                src.shift();
+                tokens.push(CreateToken("!=", TokenType.Comparison));
+            } else {
+                console.log("Unrecognised character in source:", src[0]);
+                Deno.exit(1);
+            }
+        } else if (src[0] == ">") {
+            if (src.length > 1 && src[1] == "=") {
+                src.shift();
+                src.shift();
+                tokens.push(CreateToken(">=", TokenType.Comparison));
+            } else {
+                tokens.push(CreateToken(src.shift(), TokenType.Comparison));
+            }
+        } else if (src[0] == "<") {
+            if (src.length > 1 && src[1] == "=") {
+                src.shift();
+                src.shift();
+                tokens.push(CreateToken("<=", TokenType.Comparison));
+            } else {
+                tokens.push(CreateToken(src.shift(), TokenType.Comparison));
+            }
         } else if (src[0] == ";") {
             tokens.push(CreateToken(src.shift(), TokenType.Semicolon));
         } else if (src[0] == ":") {

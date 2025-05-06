@@ -13,7 +13,8 @@ export type NodeType =
     | "NumericLiteral"
     | "StringLiteral"
     | "Identifier"
-    | "BinaryExpression";
+    | "BinaryExpression"
+    | "ComparisonExpression";
 
 /**
  * Base interface for any node in the syntax tree
@@ -74,6 +75,16 @@ export interface AssignmentExpression extends Expression {
  */
 export interface BinaryExpression extends Expression {
     kind: "BinaryExpression";
+    left: Expression;
+    right: Expression;
+    operator: string;
+}
+
+/**
+ * Comparision operation expression node
+ */
+export interface ComparisonExpression extends Expression {
+    kind: "ComparisonExpression";
     left: Expression;
     right: Expression;
     operator: string;

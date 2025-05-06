@@ -9,16 +9,23 @@ import {
     BoolValue,
     MakeString,
     StringValue,
+    MakeBool,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
     BinaryExpression,
     CallExpression,
+    ComparisonExpression,
     Identifier,
     ObjectLiteral,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
-import { AssignmentError, CalculationError, FunctionError } from "../errors.ts";
+import {
+    AssignmentError,
+    CalculationError,
+    ComparisonError,
+    FunctionError,
+} from "../errors.ts";
 
 /**
  * Evaluates a binary expression
@@ -32,12 +39,10 @@ export function EvaluateBinaryExpression(
     const left = Evaluate(binop.left, env);
     const right = Evaluate(binop.right, env);
 
-    // Handle string concatenation
     if (
         binop.operator === "+" &&
         (left.type === "string" || right.type === "string")
     ) {
-        // Convert values to strings for concatenation
         const leftStr =
             left.type === "string"
                 ? (left as StringValue).value
@@ -51,7 +56,6 @@ export function EvaluateBinaryExpression(
         return MakeString(leftStr + rightStr);
     }
 
-    // Check if both operands are numbers before evaluating the binary operation
     if (left.type === "number" && right.type === "number") {
         return EvaluateNumericBinaryExpression(
             left as NumberValue,
@@ -79,7 +83,6 @@ function EvaluateNumericBinaryExpression(
 
     let result: number;
 
-    // Switch case to evaluate different binary operators
     switch (operator) {
         case "+":
             result = leftVal + rightVal;
@@ -108,6 +111,126 @@ function EvaluateNumericBinaryExpression(
         type: "number",
         value: result,
     } as NumberValue;
+}
+
+/**
+ * Evaluates a comparison expression
+ * Handles evaluation of comparison operations between two operands.
+ * Supports numeric comparisons
+ */
+export function EvaluateComparisonExpression(
+    compop: ComparisonExpression,
+    env: Environment,
+): RuntimeValue {
+    const left = Evaluate(compop.left, env);
+    const right = Evaluate(compop.right, env);
+
+    if (left.type === "string" && right.type === "string") {
+        const leftStr = (left as StringValue).value;
+        const rightStr = (right as StringValue).value;
+
+        return EvaluateStringComparisonExpression(
+            leftStr,
+            rightStr,
+            compop.operator,
+        );
+    }
+
+    if (left.type === "number" && right.type === "number") {
+        return EvaluateNumericComparisonExpression(
+            left as NumberValue,
+            right as NumberValue,
+            compop.operator,
+        );
+    }
+
+    if (compop.operator === "==" || compop.operator === "!=") {
+        const isEqual =
+            left.type === right.type &&
+            valueToString(left) === valueToString(right);
+
+        return MakeBool(compop.operator === "==" ? isEqual : !isEqual);
+    }
+
+    return MakeNull();
+}
+
+/**
+ * Evaluates a string comparison expression
+ */
+function EvaluateStringComparisonExpression(
+    leftStr: string,
+    rightStr: string,
+    operator: string,
+): BoolValue {
+    let result: boolean;
+
+    switch (operator) {
+        case "==":
+            result = leftStr === rightStr;
+            break;
+        case "!=":
+            result = leftStr !== rightStr;
+            break;
+        case ">=":
+            result = leftStr >= rightStr;
+            break;
+        case "<=":
+            result = leftStr <= rightStr;
+            break;
+        case ">":
+            result = leftStr > rightStr;
+            break;
+        case "<":
+            result = leftStr < rightStr;
+            break;
+        default:
+            throw new ComparisonError(
+                `Unsupported operator for strings: ${operator}`,
+            );
+    }
+
+    return MakeBool(result);
+}
+
+/**
+ * Evaluates a numeric comparison expression
+ * Handles comparison operations on two numeric values.
+ */
+function EvaluateNumericComparisonExpression(
+    left: NumberValue,
+    right: NumberValue,
+    operator: string,
+): BoolValue {
+    const leftVal = left.value;
+    const rightVal = right.value;
+
+    let result: boolean;
+
+    switch (operator) {
+        case "==":
+            result = leftVal === rightVal;
+            break;
+        case "!=":
+            result = leftVal !== rightVal;
+            break;
+        case ">=":
+            result = leftVal >= rightVal;
+            break;
+        case "<=":
+            result = leftVal <= rightVal;
+            break;
+        case ">":
+            result = leftVal > rightVal;
+            break;
+        case "<":
+            result = leftVal < rightVal;
+            break;
+        default:
+            throw new ComparisonError(`Unsupported operator: ${operator}`);
+    }
+
+    return MakeBool(result);
 }
 
 /**
@@ -205,7 +328,6 @@ export function EvaluateAssignment(
 /**
  * Helper function to convert runtime values to strings
  */
-
 function valueToString(value: RuntimeValue): string {
     switch (value.type) {
         case "string":

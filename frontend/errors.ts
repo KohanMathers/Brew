@@ -39,6 +39,15 @@ export class CalculationError extends CustomError {
 }
 
 /**
+ * Thrown when there’s an issue with comparison operations
+ */
+export class ComparisonError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+/**
  * Thrown when a variable declaration fails
  */
 export class DeclarationError extends CustomError {
