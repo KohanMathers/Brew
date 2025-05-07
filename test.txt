@@ -1,15 +1,1 @@
-let x = 5;
-let y = 10;
-print(x == y)
-print(x != y)
-print(x < y)
-print(x > y)
-print(x <= y)
-print(x >= y)
-
-let a = "hello";
-let b = "world";
-print(a == a)
-print(a != b)
-print(a < b)
-print(a > b)
+print(if(5 == 4, 1, 0))

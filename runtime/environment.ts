@@ -11,7 +11,12 @@ import {
     RuntimeValue,
 } from "./values.ts";
 
-import { TimeFunction, PrintFunction, NatFunction } from "./functions.ts";
+import {
+    TimeFunction,
+    PrintFunction,
+    NatFunction,
+    IfFunction,
+} from "./functions.ts";
 
 /**
  * Sets up the base env with null/true/false preloaded
@@ -25,6 +30,7 @@ export function CreateGlobalEnv() {
 
     env.declareVariable("print", MakeInternalCall(PrintFunction), true);
     env.declareVariable("time", MakeInternalCall(TimeFunction), true);
+    env.declareVariable("if", MakeInternalCall(IfFunction), true);
     env.declareVariable("nat", MakeInternalCall(NatFunction), true);
 
     return env;

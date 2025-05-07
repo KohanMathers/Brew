@@ -1,5 +1,10 @@
+import { FunctionError } from "../frontend/errors.ts";
+import Environment from "./environment.ts";
+import { Evaluate } from "./interpreter.ts";
 import {
     BoolValue,
+    FunctionValue,
+    InternalCallValue,
     MakeNull,
     MakeNumber,
     NumberValue,
@@ -40,6 +45,69 @@ export function PrintFunction(args: RuntimeValue[]): RuntimeValue {
 
     console.log(...values);
     return MakeNull();
+}
+
+/**
+ * Evaluates a condition and executes appropriate branch
+ * First argument is the condition to check
+ * Second argument is the function/value to use if condition is true
+ * Third (optional) argument is the function/value to use if condition is false
+ */
+export function IfFunction(
+    args: RuntimeValue[],
+    env: Environment,
+): RuntimeValue {
+    // Make sure we have at least a condition and a "then" branch
+    if (args.length < 2) {
+        console.log(
+            "Error: 'if' requires at least 2 arguments (condition, then)",
+        );
+        return MakeNull();
+    }
+
+    const condition = args[0];
+
+    // Evaluate the condition - truthy values are anything except false, null, and 0
+    let conditionResult = false;
+
+    if (condition.type === "boolean") {
+        conditionResult = (condition as BoolValue).value;
+    } else if (condition.type === "number") {
+        conditionResult = (condition as NumberValue).value !== 0;
+    } else if (condition.type === "string") {
+        conditionResult = (condition as StringValue).value !== "";
+    } else if (condition.type === "null") {
+        conditionResult = false;
+    } else {
+        // Objects and functions are always truthy
+        conditionResult = true;
+    }
+
+    // Get the appropriate branch but don't evaluate yet
+    const branchToExecute = conditionResult
+        ? args.length >= 2
+            ? args[1]
+            : MakeNull()
+        : args.length >= 3
+        ? args[2]
+        : MakeNull();
+
+    // Execute only the selected branch
+    if (branchToExecute.type === "function") {
+        const fn = branchToExecute as FunctionValue;
+        const scope = new Environment(fn.declarationEnv);
+
+        let result: RuntimeValue = MakeNull();
+        for (const stmt of fn.body) {
+            result = Evaluate(stmt, scope);
+        }
+        return result;
+    } else if (branchToExecute.type === "internal-call") {
+        return (branchToExecute as InternalCallValue).call([], env);
+    } else {
+        // Otherwise just return the value
+        return branchToExecute;
+    }
 }
 
 /**
