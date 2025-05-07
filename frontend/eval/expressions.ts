@@ -234,6 +234,47 @@ function EvaluateNumericComparisonExpression(
 }
 
 /**
+ * Special handling for the if function to prevent eager evaluation
+ * @param callExpr The call expression for the if statement
+ * @param env The current environment
+ */
+function EvaluateIfExpression(
+    callExpr: CallExpression,
+    env: Environment,
+): RuntimeValue {
+    if (callExpr.args.length < 2) {
+        throw new FunctionError(
+            "'if' requires at least 2 arguments (condition, then)",
+        );
+    }
+
+    const condition = Evaluate(callExpr.args[0], env);
+
+    let conditionResult = false;
+    if (condition.type === "boolean") {
+        conditionResult = (condition as BoolValue).value;
+    } else if (condition.type === "number") {
+        conditionResult = (condition as NumberValue).value !== 0;
+    } else if (condition.type === "string") {
+        conditionResult = (condition as StringValue).value !== "";
+    } else if (condition.type === "null") {
+        conditionResult = false;
+    } else {
+        conditionResult = true;
+    }
+
+    if (conditionResult) {
+        // Execute the 'then' branch
+        return Evaluate(callExpr.args[1], env);
+    } else if (callExpr.args.length >= 3) {
+        // Execute the 'else' branch if provided
+        return Evaluate(callExpr.args[2], env);
+    }
+
+    return MakeNull();
+}
+
+/**
  * Evaluates an identifier expression
  * Looks up the value of a variable by its identifier in the current environment.
  */
@@ -266,6 +307,7 @@ export function EvaluateObjectExpression(
 
 /**
  * Evaluates a function call expression.
+ * Checks for if function
  * Resolves and evaluates all arguments.
  * Verifies the function is callable.
  * Invokes the function and returns the result.
@@ -274,6 +316,13 @@ export function EvaluateCallExpression(
     expression: CallExpression,
     env: Environment,
 ): RuntimeValue {
+    if (
+        expression.caller.kind === "Identifier" &&
+        (expression.caller as Identifier).symbol === "if"
+    ) {
+        return EvaluateIfExpression(expression, env);
+    }
+
     const args = expression.args.map((arg) => Evaluate(arg, env));
     const func = Evaluate(expression.caller, env);
 
