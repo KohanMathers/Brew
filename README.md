@@ -211,7 +211,7 @@ Contributions are welcome! Some potential areas for enhancement:
 
 ## License
 
-[MIT License](LICENSE)
+[GNU GPL v3](LICENSE)
 
 ## Acknowledgements
 
