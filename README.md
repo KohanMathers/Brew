@@ -104,10 +104,20 @@ PaperBag supports standard arithmetic operators:
 - Division: `/`
 - Modulo: `%`
 
+It also supports standard comparison operators:
+
+- Equal to: `==`
+- Not equal to: `!=`
+- Greater than `>`
+- Less than `<`
+- Greater or equal to `>=`
+- Less than or equal to `<=`
+
 ### Built-in Functions
 
 - `print(...)` - Output values to console
 - `time()` - Get current timestamp
+- `if(condition, true, optional false)`  - Execute the specified function based on the condition given
 - `nat(...)` - Easter egg function
 
 ## Project Structure
@@ -186,15 +196,18 @@ person.greet();
 print("Age:", person.age);
 ```
 
+### If/else Example
+```
+if((1+1) == 2, print("True"), print("Optionally, false"))
+```
+
 ## Contributing
 
 Contributions are welcome! Some potential areas for enhancement:
 
-- Conditional statements (if/else)
 - Loops (for, while)
 - More comprehensive standard library
 - Type checking
-- Additional operators (comparison, logical)
 
 ## License
 
