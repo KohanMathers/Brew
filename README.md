@@ -233,4 +233,3 @@ Contributions are welcome! Some potential areas for enhancement:
 
 - PaperBag is a fun personal language implementation project
 - Special thanks to all modern language implementation resources that inspired this work
-- 
