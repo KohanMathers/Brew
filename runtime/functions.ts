@@ -1,4 +1,3 @@
-import { FunctionError } from "../frontend/errors.ts";
 import Environment from "./environment.ts";
 import { Evaluate } from "./interpreter.ts";
 import {
@@ -89,8 +88,8 @@ export function IfFunction(
             ? args[1]
             : MakeNull()
         : args.length >= 3
-        ? args[2]
-        : MakeNull();
+          ? args[2]
+          : MakeNull();
 
     // Execute only the selected branch
     if (branchToExecute.type === "function") {
