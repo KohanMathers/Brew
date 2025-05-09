@@ -1,4 +1,4 @@
-# PaperBag v1.0
+# PaperBag v1.1
 
 PaperBag is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
