@@ -1,1 +1,19 @@
-if((50-10)==40, nat("save"), nat("7"))
+let x = 10;
+let y = 20;
+let name = "PaperBag";
+
+x + 5;
+print("Hello world");
+
+function add(a, b) {
+    a + b
+}
+
+add(5, 3);
+
+let person = {
+    name: "Alice",
+    age: 28,
+};
+
+if(x > y, print(x + " is greater than " + y), print(x + " is not greater than " + y));

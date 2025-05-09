@@ -45,6 +45,22 @@ deno run --allow-read main.ts
 
 ## Language Guide
 
+### Syntax Requirements
+
+PaperBag requires semicolons (`;`) at the end of every statement. This includes:
+
+- Variable declarations: `let x = 10;`
+- Expression statements: `x + 5;`
+- Function calls: `print("Hello");`
+- Assignment statements: `x = 20;`
+
+Function declarations with braces do not require semicolons:
+```
+function add(a, b) {
+    a + b; // Note: The return expression requires a semicolon
+}
+```
+
 ### Variables and Assignment
 
 ```
@@ -198,7 +214,7 @@ print("Age:", person.age);
 
 ### If/else Example
 ```
-if((1+1) == 2, print("True"), print("Optionally, false"))
+if((1+1) == 2, print("True"), print("Optionally, false"));
 ```
 
 ## Contributing

@@ -90,6 +90,26 @@ export default class Parser {
         return prev;
     }
 
+    /**
+     * this.Expect() but just for semicolons
+     */
+
+    private ExpectSemicolon(context: string = "statement"): Token {
+        try {
+            return this.Expect(
+                TokenType.Semicolon,
+                `Expected ';' at the end of ${context}.`,
+            );
+        } catch (error) {
+            if (error instanceof ParseError) {
+                throw new ParseError(
+                    `${error.message}\nSemicolons are required after all ${context}s.`,
+                );
+            }
+            throw error;
+        }
+    }
+
     // ===== Statement Parsing Methods =====
 
     /**
@@ -102,8 +122,11 @@ export default class Parser {
                 return this.ParseVariableDeclaration();
             case TokenType.Function:
                 return this.ParseFunctionDeclaration();
-            default:
-                return this.ParseExpression();
+            default: {
+                const expr = this.ParseExpression();
+                this.ExpectSemicolon("expression");
+                return expr;
+            }
         }
     }
 
@@ -143,10 +166,7 @@ export default class Parser {
             constant: isConstant,
         } as VariableDeclaration;
 
-        this.Expect(
-            TokenType.Semicolon,
-            "Expected ';' after variable declaration.",
-        );
+        this.ExpectSemicolon("variable declaration");
         return declaration;
     }
 
@@ -188,6 +208,7 @@ export default class Parser {
             name,
             parameters,
             kind: "FunctionDeclaration",
+            async: false,
         } as FunctionDeclaration;
 
         return func;
