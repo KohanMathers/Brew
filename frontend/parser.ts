@@ -14,6 +14,7 @@ import {
     ObjectLiteral,
     CallExpression,
     MemberExpression,
+    ForExpression,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { FunctionError, ParseError } from "./errors.ts";
@@ -122,12 +123,39 @@ export default class Parser {
                 return this.ParseVariableDeclaration();
             case TokenType.Function:
                 return this.ParseFunctionDeclaration();
+            case TokenType.Identifier:
+                if (this.At().value === "for") {
+                    return this.ParseForExpression();
+                }
             default: {
                 const expr = this.ParseExpression();
                 this.ExpectSemicolon("expression");
                 return expr;
             }
         }
+    }
+
+    private ParseForExpression(): Stmt {
+        this.Next(); // Consume 'for'
+        this.Expect(TokenType.OpenParen, "Expected '(' after 'for'.");
+
+        const amount = this.ParseExpression();
+        this.Expect(TokenType.CloseParen, "Expected ')' after 'for' amount.");
+
+        this.Expect(TokenType.OpenBrace, "Expected '{' to start 'for' block.");
+        const body: Stmt[] = [];
+
+        while (this.NotEOF() && this.At().type !== TokenType.CloseBrace) {
+            body.push(this.ParseStatement());
+        }
+
+        this.Expect(TokenType.CloseBrace, "Expected '}' to close 'for' block.");
+
+        return {
+            kind: "ForExpression",
+            amount,
+            body,
+        } as ForExpression;
     }
 
     /**

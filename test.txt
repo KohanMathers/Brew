@@ -17,3 +17,10 @@ let person = {
 };
 
 if(x > y, print(x + " is greater than " + y), print(x + " is not greater than " + y));
+
+let p = 1;
+
+for(3) {
+    print(p);
+    p = p + 1;
+}

@@ -14,7 +14,8 @@ export type NodeType =
     | "StringLiteral"
     | "Identifier"
     | "BinaryExpression"
-    | "ComparisonExpression";
+    | "ComparisonExpression"
+    | "ForExpression";
 
 /**
  * Base interface for any node in the syntax tree
@@ -107,6 +108,15 @@ export interface CallExpression extends Expression {
     kind: "CallExpression";
     args: Expression[];
     caller: Expression;
+}
+
+/**
+ * For expression node
+ */
+export interface ForExpression extends Stmt {
+    kind: "ForExpression";
+    amount: Expression;
+    body: Stmt[];
 }
 
 // ===== Literal Nodes =====

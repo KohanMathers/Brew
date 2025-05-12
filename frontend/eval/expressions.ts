@@ -18,6 +18,7 @@ import {
     ComparisonExpression,
     Identifier,
     ObjectLiteral,
+    ForExpression,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import {
@@ -395,4 +396,32 @@ function valueToString(value: RuntimeValue): string {
         default:
             return "[unknown]";
     }
+}
+
+/**
+ * Evaluates a for expression
+ * Handles execution of a for loop with a specified number of iterations.
+ */
+export function EvaluateForExpression(
+    forExpr: ForExpression,
+    env: Environment,
+): RuntimeValue {
+    const amountValue = Evaluate(forExpr.amount, env);
+
+    if (amountValue.type !== "number") {
+        throw new FunctionError(
+            `Expected a number for 'for' loop amount, but got ${amountValue.type}.`,
+        );
+    }
+
+    const iterations = (amountValue as NumberValue).value;
+    let result: RuntimeValue = MakeNull();
+
+    for (let i = 0; i < iterations; i++) {
+        for (const stmt of forExpr.body) {
+            result = Evaluate(stmt, env);
+        }
+    }
+
+    return result;
 }

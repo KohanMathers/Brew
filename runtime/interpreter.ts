@@ -13,6 +13,7 @@ import {
     FunctionDeclaration,
     StringLiteral,
     ComparisonExpression,
+    ForExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -31,6 +32,7 @@ import {
     EvaluateCallExpression,
     EvaluateIdentifier,
     EvaluateObjectExpression,
+    EvaluateForExpression,
 } from "../frontend/eval/expressions.ts";
 
 /**
@@ -85,6 +87,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 astNode as FunctionDeclaration,
                 env,
             );
+
+        case "ForExpression":
+            return EvaluateForExpression(astNode as ForExpression, env);
 
         default:
             throw new InterpretError(
