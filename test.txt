@@ -39,3 +39,9 @@ while(t < 10) {
     t = t + 1;
     print(t);
 }
+
+print("-------------------------------------------");
+
+// This is a comment
+
+print("Comment skipped successfully.");

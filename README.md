@@ -129,6 +129,9 @@ It also supports standard comparison operators:
 - Greater or equal to `>=`
 - Less than or equal to `<=`
 
+### Comments
+Single line comments are also supported provided they begin with `//`. e.g. `// This is a single line comment`
+
 ### Built-in Functions
 
 - `print(...)` - Output values to console

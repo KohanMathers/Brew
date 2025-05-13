@@ -146,8 +146,12 @@ export function tokenize(sourceCode: string): Token[] {
     let src = sourceCode.split("");
 
     while (src.length > 0) {
-        // Handle single-character tokens
-        if (src[0] == "(") {
+        if (src[0] == "/" && src[1] == "/") {
+            while (src.length > 0 && src[0] != "\n") {
+                src.shift();
+            }
+            src.shift();
+        } else if (src[0] == "(") {
             tokens.push(CreateToken(src.shift(), TokenType.OpenParen));
         } else if (src[0] == ")") {
             tokens.push(CreateToken(src.shift(), TokenType.CloseParen));
