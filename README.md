@@ -217,11 +217,18 @@ print("Age:", person.age);
 if((1+1) == 2, print("True"), print("Optionally, false"));
 ```
 
+### For Loop Example
+```
+for(3) {
+    print("This is looping 3 times.")
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Some potential areas for enhancement:
 
-- Loops (for, while)
+- Loops (for)
 - More comprehensive standard library
 - Type checking
 
