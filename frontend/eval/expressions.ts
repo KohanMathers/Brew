@@ -19,6 +19,7 @@ import {
     Identifier,
     ObjectLiteral,
     ForExpression,
+    WhileExpression,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import {
@@ -419,6 +420,37 @@ export function EvaluateForExpression(
 
     for (let i = 0; i < iterations; i++) {
         for (const stmt of forExpr.body) {
+            result = Evaluate(stmt, env);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Evaluates a while expression
+ * Handles execution of a while loop with a specified condition.
+ */
+export function EvaluateWhileExpression(
+    whileExpr: WhileExpression,
+    env: Environment,
+): RuntimeValue {
+    let result: RuntimeValue = MakeNull();
+
+    while (true) {
+        const conditionValue = Evaluate(whileExpr.condition, env);
+
+        if (conditionValue.type !== "boolean") {
+            throw new FunctionError(
+                `Expected a boolean for 'while' loop condition, but got a ${conditionValue.type}.`,
+            );
+        }
+
+        if (!(conditionValue as BoolValue).value) {
+            break;
+        }
+
+        for (const stmt of whileExpr.body) {
             result = Evaluate(stmt, env);
         }
     }

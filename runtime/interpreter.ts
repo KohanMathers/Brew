@@ -14,6 +14,7 @@ import {
     StringLiteral,
     ComparisonExpression,
     ForExpression,
+    WhileExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -33,6 +34,7 @@ import {
     EvaluateIdentifier,
     EvaluateObjectExpression,
     EvaluateForExpression,
+    EvaluateWhileExpression,
 } from "../frontend/eval/expressions.ts";
 
 /**
@@ -90,6 +92,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
 
         case "ForExpression":
             return EvaluateForExpression(astNode as ForExpression, env);
+
+        case "WhileExpression":
+            return EvaluateWhileExpression(astNode as WhileExpression, env);
 
         default:
             throw new InterpretError(

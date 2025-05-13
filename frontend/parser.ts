@@ -15,6 +15,7 @@ import {
     CallExpression,
     MemberExpression,
     ForExpression,
+    WhileExpression,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { FunctionError, ParseError } from "./errors.ts";
@@ -126,6 +127,8 @@ export default class Parser {
             case TokenType.Identifier:
                 if (this.At().value === "for") {
                     return this.ParseForExpression();
+                } else if (this.At().value == "while") {
+                    return this.ParseWhileExpression();
                 }
             default: {
                 const expr = this.ParseExpression();
@@ -135,8 +138,11 @@ export default class Parser {
         }
     }
 
+    /**
+     * Parses a for expression
+     */
     private ParseForExpression(): Stmt {
-        this.Next(); // Consume 'for'
+        this.Next();
         this.Expect(TokenType.OpenParen, "Expected '(' after 'for'.");
 
         const amount = this.ParseExpression();
@@ -156,6 +162,41 @@ export default class Parser {
             amount,
             body,
         } as ForExpression;
+    }
+
+    /**
+     * Parses a while expression
+     */
+    private ParseWhileExpression(): Stmt {
+        this.Next();
+        this.Expect(TokenType.OpenParen, "Expected '(' after 'while'.");
+
+        const condition = this.ParseExpression();
+        this.Expect(
+            TokenType.CloseParen,
+            "Expected ')' after 'while' condition.",
+        );
+
+        this.Expect(
+            TokenType.OpenBrace,
+            "Expected '{' to start 'while' block.",
+        );
+        const body: Stmt[] = [];
+
+        while (this.NotEOF() && this.At().type !== TokenType.CloseBrace) {
+            body.push(this.ParseStatement());
+        }
+
+        this.Expect(
+            TokenType.CloseBrace,
+            "Expected '}' to close 'while' block.",
+        );
+
+        return {
+            kind: "WhileExpression",
+            condition,
+            body,
+        } as WhileExpression;
     }
 
     /**

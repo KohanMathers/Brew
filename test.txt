@@ -2,8 +2,12 @@ let x = 10;
 let y = 20;
 let name = "PaperBag";
 
+print("-------------------------------------------");
+
 x + 5;
 print("Hello world");
+
+print("-------------------------------------------");
 
 function add(a, b) {
     a + b;
@@ -18,9 +22,20 @@ let person = {
 
 if(x > y, print(x + " is greater than " + y), print(x + " is not greater than " + y));
 
+print("-------------------------------------------");
+
 let p = 1;
 
 for(3) {
     print(p);
     p = p + 1;
+}
+
+print("-------------------------------------------");
+
+let t = 0;
+
+while(t < 10) {
+    t = t + 1;
+    print(t);
 }

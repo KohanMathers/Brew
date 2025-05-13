@@ -15,7 +15,8 @@ export type NodeType =
     | "Identifier"
     | "BinaryExpression"
     | "ComparisonExpression"
-    | "ForExpression";
+    | "ForExpression"
+    | "WhileExpression";
 
 /**
  * Base interface for any node in the syntax tree
@@ -116,6 +117,15 @@ export interface CallExpression extends Expression {
 export interface ForExpression extends Stmt {
     kind: "ForExpression";
     amount: Expression;
+    body: Stmt[];
+}
+
+/**
+ * While expression node
+ */
+export interface WhileExpression extends Stmt {
+    kind: "WhileExpression";
+    condition: Expression;
     body: Stmt[];
 }
 

@@ -134,6 +134,8 @@ It also supports standard comparison operators:
 - `print(...)` - Output values to console
 - `time()` - Get current timestamp
 - `if(condition, true, optional false)`  - Execute the specified function based on the condition given
+- `for(amount) {args}` - Execute the specified args the given amount of times
+- `while(condition) {args}` - Eecute the specified args while the given condition is true
 - `nat(...)` - Easter egg function
 
 ## Project Structure
@@ -224,11 +226,20 @@ for(3) {
 }
 ```
 
+### While Loop Example
+```
+let t = 0;
+
+while(t < 10) {
+    t = t + 1;
+    print("This is looping 10 times.");
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Some potential areas for enhancement:
 
-- Loops (for)
 - More comprehensive standard library
 - Type checking
 
