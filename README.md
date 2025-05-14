@@ -133,7 +133,7 @@ It also supports standard comparison operators:
 - Single line comments are supported provided they begin with `//`. e.g. `// This is a single line comment`
 - Multi-line comments are also supported provided they are wrapped in a `/*` and `*/`. e.g.
 ```
-/** This is
+/* This is
     a multi-line
     comment */
 ```
