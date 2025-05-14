@@ -42,6 +42,14 @@ while(t < 10) {
 
 print("-------------------------------------------");
 
-// This is a comment
+// This is a single-line comment
 
-print("Comment skipped successfully.");
+print("Single-line comment skipped successfully.");
+
+print("-------------------------------------------");
+
+/* This is a
+   mutli-line
+   comment */
+
+print("Multi-line comment skipped successfully.");

@@ -130,7 +130,13 @@ It also supports standard comparison operators:
 - Less than or equal to `<=`
 
 ### Comments
-Single line comments are also supported provided they begin with `//`. e.g. `// This is a single line comment`
+- Single line comments are supported provided they begin with `//`. e.g. `// This is a single line comment`
+- Multi-line comments are also supported provided they are wrapped in a `/*` and `*/`. e.g.
+```
+/** This is
+    a multi-line
+    comment */
+```
 
 ### Built-in Functions
 

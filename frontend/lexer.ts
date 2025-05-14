@@ -151,6 +151,17 @@ export function tokenize(sourceCode: string): Token[] {
                 src.shift();
             }
             src.shift();
+        } else if (src[0] == "/" && src[1] == "*") {
+            while (src.length > 1 && !(src[0] == "*" && src[1] == "/")) {
+                src.shift();
+            }
+
+            if (src.length > 1) {
+                src.shift();
+                src.shift();
+            } else {
+                throw new ParseError("Unterminated multi-line comment");
+            }
         } else if (src[0] == "(") {
             tokens.push(CreateToken(src.shift(), TokenType.OpenParen));
         } else if (src[0] == ")") {
