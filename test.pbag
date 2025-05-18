@@ -65,3 +65,13 @@ print(e);
 print(e + f);
 print(e + g);
 print(e + " " + h);
+
+print("-------------------------------------------");
+
+let i = 0 - 5;
+let j = i / 2;
+
+print(abs(i));
+print(round(j));
+print(floor(j));
+print(ceil(j));

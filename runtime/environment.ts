@@ -19,6 +19,10 @@ import {
     IntFunction,
     FloatFunction,
     StringFunction,
+    CeilFunction,
+    AbsFunction,
+    FloorFunction,
+    RoundFunction,
 } from "./functions.ts";
 
 /**
@@ -38,6 +42,10 @@ export function CreateGlobalEnv() {
     env.declareVariable("int", MakeInternalCall(IntFunction), true);
     env.declareVariable("float", MakeInternalCall(FloatFunction), true);
     env.declareVariable("str", MakeInternalCall(StringFunction), true);
+    env.declareVariable("abs", MakeInternalCall(AbsFunction), true);
+    env.declareVariable("round", MakeInternalCall(RoundFunction), true);
+    env.declareVariable("floor", MakeInternalCall(FloorFunction), true);
+    env.declareVariable("ceil", MakeInternalCall(CeilFunction), true);
 
     return env;
 }

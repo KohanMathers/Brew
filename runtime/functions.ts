@@ -229,3 +229,71 @@ export function StringFunction(args: RuntimeValue[]): RuntimeValue {
         return MakeNull();
     }
 }
+
+export function AbsFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length != 1) {
+        console.log("abs() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        const num = (arg as NumberValue).value;
+        return MakeNumber(Math.abs(num));
+    } else {
+        console.log("abs() only accepts numbers.");
+        return MakeNull();
+    }
+}
+
+export function RoundFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length != 1) {
+        console.log("round() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        const num = (arg as NumberValue).value;
+        return MakeNumber(Math.round(num));
+    } else {
+        console.log("round() only accepts numbers.");
+        return MakeNull();
+    }
+}
+
+export function FloorFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length != 1) {
+        console.log("floor() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        const num = (arg as NumberValue).value;
+        return MakeNumber(Math.floor(num));
+    } else {
+        console.log("floor() only accepts numbers.");
+        return MakeNull();
+    }
+}
+
+export function CeilFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length != 1) {
+        console.log("ceil() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        const num = (arg as NumberValue).value;
+        return MakeNumber(Math.ceil(num));
+    } else {
+        console.log("ceil() only accepts numbers.");
+        return MakeNull();
+    }
+}
