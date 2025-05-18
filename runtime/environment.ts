@@ -8,6 +8,7 @@ import {
     MakeBool,
     MakeInternalCall,
     MakeNull,
+    MakeString,
     RuntimeValue,
 } from "./values.ts";
 
@@ -33,8 +34,10 @@ export function CreateGlobalEnv() {
 
     const globals: [string, RuntimeValue][] = [
         ["null", MakeNull()],
+        ["undefined", MakeNull()],
         ["true", MakeBool(true)],
         ["false", MakeBool(false)],
+        ["pbver", MakeString("PaperBag v1.2")],
         ["print", MakeInternalCall(PrintFunction)],
         ["time", MakeInternalCall(TimeFunction)],
         ["if", MakeInternalCall(IfFunction)],
