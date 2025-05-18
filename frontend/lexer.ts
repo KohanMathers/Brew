@@ -147,12 +147,15 @@ export function tokenize(sourceCode: string): Token[] {
 
     while (src.length > 0) {
         if (src[0] == "/" && src[1] == "/") {
-            while (src.length > 0 && src[0] != "\n") {
+            while (src.length > 0 && (src[0] as string) != "\n") {
                 src.shift();
             }
             src.shift();
         } else if (src[0] == "/" && src[1] == "*") {
-            while (src.length > 1 && !(src[0] == "*" && src[1] == "/")) {
+            while (
+                src.length > 1 &&
+                !((src[0] as string) == "*" && (src[1] as string) == "/")
+            ) {
                 src.shift();
             }
 
