@@ -1,4 +1,4 @@
-# PaperBag v1.1
+# PaperBag v1.2
 
 PaperBag is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
@@ -22,26 +22,41 @@ PaperBag is a lightweight, interpreted programming language with JavaScript-like
 
 ### Running PaperBag
 
-The language can run in two modes:
+PaperBag can run in two modes:
 
-1. **REPL Mode** - Interactive shell for testing expressions
-2. **Script Mode** - Run code from a file
+1. **REPL Mode** – Interactive shell for testing expressions  
+2. **Script Mode** – Run `.pbag` files from disk
 
-To switch between modes, modify the `main.ts` file:
+---
 
-```typescript
-// For REPL mode
-Repl();
+#### Script Mode (recommended)
 
-// For script mode
-Run("./your-script.txt");
+Run any `.pbag` script by passing the filename as an argument:
+
+```bash
+deno run --allow-read main.ts your-script.pbag
 ```
 
-Then run the interpreter:
+> Note: Only `.pbag` files are supported.
 
-```
+---
+
+#### REPL Mode
+
+To launch the REPL, run without any arguments:
+
+```bash
 deno run --allow-read main.ts
 ```
+
+You’ll enter an interactive prompt:
+```
+PaperBag Repl v1.2
+> print("hello")
+hello
+```
+
+Type `exit` to quit the REPL.
 
 ## Language Guide
 

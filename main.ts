@@ -1,11 +1,14 @@
-// deno-lint-ignore-file no-unused-vars
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import { CreateGlobalEnv } from "./runtime/environment.ts";
 
-// Choose what to run - REPL for dev stuff, Run() for script files
-//Repl();
-Run("./test.txt");
+const args = Deno.args;
+
+if (args.length > 0) {
+    Run(args[0]);
+} else {
+    Repl();
+}
 
 /**
  * Runs whatever code is inside the given file
@@ -14,6 +17,11 @@ Run("./test.txt");
 async function Run(filename: string) {
     const parser = new Parser();
     const env = CreateGlobalEnv();
+
+    if (!filename.endsWith(".pbag")) {
+        console.error("Only .pbag files are supported.");
+        Deno.exit(1);
+    }
 
     try {
         const input = await Deno.readTextFile(filename);
@@ -35,7 +43,7 @@ function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    console.log("\nPaperBag Repl v1.0");
+    console.log("\nPaperBag Repl v1.2");
 
     while (true) {
         try {
