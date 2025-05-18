@@ -30,22 +30,27 @@ import {
  */
 export function CreateGlobalEnv() {
     const env = new Environment();
-    env.declareVariable("null", MakeNull(), true);
 
-    env.declareVariable("true", MakeBool(true), true);
-    env.declareVariable("false", MakeBool(false), true);
+    const globals: [string, RuntimeValue][] = [
+        ["null", MakeNull()],
+        ["true", MakeBool(true)],
+        ["false", MakeBool(false)],
+        ["print", MakeInternalCall(PrintFunction)],
+        ["time", MakeInternalCall(TimeFunction)],
+        ["if", MakeInternalCall(IfFunction)],
+        ["nat", MakeInternalCall(NatFunction)],
+        ["int", MakeInternalCall(IntFunction)],
+        ["float", MakeInternalCall(FloatFunction)],
+        ["str", MakeInternalCall(StringFunction)],
+        ["abs", MakeInternalCall(AbsFunction)],
+        ["round", MakeInternalCall(RoundFunction)],
+        ["floor", MakeInternalCall(FloorFunction)],
+        ["ceil", MakeInternalCall(CeilFunction)],
+    ];
 
-    env.declareVariable("print", MakeInternalCall(PrintFunction), true);
-    env.declareVariable("time", MakeInternalCall(TimeFunction), true);
-    env.declareVariable("if", MakeInternalCall(IfFunction), true);
-    env.declareVariable("nat", MakeInternalCall(NatFunction), true);
-    env.declareVariable("int", MakeInternalCall(IntFunction), true);
-    env.declareVariable("float", MakeInternalCall(FloatFunction), true);
-    env.declareVariable("str", MakeInternalCall(StringFunction), true);
-    env.declareVariable("abs", MakeInternalCall(AbsFunction), true);
-    env.declareVariable("round", MakeInternalCall(RoundFunction), true);
-    env.declareVariable("floor", MakeInternalCall(FloorFunction), true);
-    env.declareVariable("ceil", MakeInternalCall(CeilFunction), true);
+    for (const [name, value] of globals) {
+        env.declareVariable(name, value, true);
+    }
 
     return env;
 }
