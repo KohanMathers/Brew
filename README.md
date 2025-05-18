@@ -159,7 +159,10 @@ It also supports standard comparison operators:
 - `time()` - Get current timestamp
 - `if(condition, true, optional false)`  - Execute the specified function based on the condition given
 - `for(amount) {args}` - Execute the specified args the given amount of times
-- `while(condition) {args}` - Eecute the specified args while the given condition is true
+- `while(condition) {args}` - Execute the specified args while the given condition is true
+- `int(...)` - Convert the inputted value to an integer
+- `float(...)` - Convert the inputted value to a float
+- `str(...)` - Convert the inputted value to a string
 - `nat(...)` - Easter egg function
 
 ## Project Structure

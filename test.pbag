@@ -1,10 +1,10 @@
-let x = 10;
-let y = 20;
+let a = 10;
+let b = 20;
 let name = "PaperBag";
 
 print("-------------------------------------------");
 
-x + 5;
+a + 5;
 print("Hello world");
 
 print("-------------------------------------------");
@@ -20,24 +20,24 @@ let person = {
     age: 28,
 };
 
-if(x > y, print(x + " is greater than " + y), print(x + " is not greater than " + y));
+if(a > b, print(a + " is greater than " + b), print(a + " is not greater than " + b));
 
 print("-------------------------------------------");
 
-let p = 1;
+let c = 1;
 
 for(3) {
-    print(p);
-    p = p + 1;
+    print(c);
+    c = c + 1;
 }
 
 print("-------------------------------------------");
 
-let t = 0;
+let d = 0;
 
-while(t < 10) {
-    t = t + 1;
-    print(t);
+while(d < 10) {
+    d = d + 1;
+    print(d);
 }
 
 print("-------------------------------------------");
@@ -53,3 +53,15 @@ print("-------------------------------------------");
    comment */
 
 print("Multi-line comment skipped successfully.");
+
+print("-------------------------------------------");
+
+let e = 1;
+let f = int(e);
+let g = float(e);
+let h = str(e);
+
+print(e);
+print(e + f);
+print(e + g);
+print(e + " " + h);

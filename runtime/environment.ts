@@ -16,6 +16,9 @@ import {
     PrintFunction,
     NatFunction,
     IfFunction,
+    IntFunction,
+    FloatFunction,
+    StringFunction,
 } from "./functions.ts";
 
 /**
@@ -32,6 +35,9 @@ export function CreateGlobalEnv() {
     env.declareVariable("time", MakeInternalCall(TimeFunction), true);
     env.declareVariable("if", MakeInternalCall(IfFunction), true);
     env.declareVariable("nat", MakeInternalCall(NatFunction), true);
+    env.declareVariable("int", MakeInternalCall(IntFunction), true);
+    env.declareVariable("float", MakeInternalCall(FloatFunction), true);
+    env.declareVariable("str", MakeInternalCall(StringFunction), true);
 
     return env;
 }

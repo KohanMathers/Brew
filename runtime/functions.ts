@@ -6,6 +6,7 @@ import {
     InternalCallValue,
     MakeNull,
     MakeNumber,
+    MakeString,
     NumberValue,
     RuntimeValue,
     StringValue,
@@ -165,4 +166,66 @@ export function NatFunction(args: RuntimeValue[]): RuntimeValue {
 
     console.log(response);
     return MakeNull();
+}
+
+export function IntFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length !== 1) {
+        console.log("int() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        return arg;
+    } else if (arg.type === "string") {
+        const str = (arg as StringValue).value;
+        const num = parseInt(str, 10);
+        return MakeNumber(num);
+    } else {
+        console.log("int() only accepts numbers or strings.");
+        return MakeNull();
+    }
+}
+
+export function FloatFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length !== 1) {
+        console.log("float() only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "number") {
+        return arg;
+    } else if (arg.type === "string") {
+        const str = (arg as StringValue).value;
+        const num = parseFloat(str);
+        return MakeNumber(num);
+    } else {
+        console.log("float() only accepts numbers or strings.");
+        return MakeNull();
+    }
+}
+
+export function StringFunction(args: RuntimeValue[]): RuntimeValue {
+    if (args.length !== 1) {
+        console.log("String only accepts one argument.");
+        return MakeNull();
+    }
+
+    const arg = args[0];
+
+    if (arg.type === "string") {
+        return arg;
+    } else if (arg.type === "number") {
+        const str = String((arg as NumberValue).value);
+        return MakeString(str);
+    } else if (arg.type === "boolean") {
+        const str = String((arg as BoolValue).value);
+        return MakeString(str);
+    } else {
+        console.log("String only accepts strings or numbers.");
+        return MakeNull();
+    }
 }
