@@ -115,12 +115,17 @@ export default class Parser {
                 return this.ParseVariableDeclaration();
             case TokenType.Function:
                 return this.ParseFunctionDeclaration();
-            case TokenType.Identifier:
+            case TokenType.Identifier: {
                 if (this.At().value === "for") {
                     return this.ParseForExpression();
-                } else if (this.At().value == "while") {
+                } else if (this.At().value === "while") {
                     return this.ParseWhileExpression();
                 }
+                // if neither for nor while, handle as default:
+                const expr = this.ParseExpression();
+                this.ExpectSemicolon("expression");
+                return expr;
+            }
             default: {
                 const expr = this.ParseExpression();
                 this.ExpectSemicolon("expression");
