@@ -68,8 +68,8 @@ print(e + " " + h);
 
 print("-------------------------------------------");
 
-let i = 0 - 5;
-let j = i / 2;
+let i = -5;
+let j = 2.5;
 
 print(abs(i));
 print(round(j));

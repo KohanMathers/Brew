@@ -177,14 +177,6 @@ export function tokenize(sourceCode: string): Token[] {
             tokens.push(CreateToken(src.shift(), TokenType.OpenBracket));
         } else if (src[0] == "]") {
             tokens.push(CreateToken(src.shift(), TokenType.CloseBracket));
-        } else if (
-            src[0] == "+" ||
-            src[0] == "-" ||
-            src[0] == "*" ||
-            src[0] == "/" ||
-            src[0] == "%"
-        ) {
-            tokens.push(CreateToken(src.shift(), TokenType.BinaryOperator));
         } else if (src[0] == "=") {
             // Check if it's == (comparison) or = (assignment)
             if (src.length > 1 && src[1] == "=") {
@@ -233,13 +225,28 @@ export function tokenize(sourceCode: string): Token[] {
             tokens.push(CreateToken(src.shift(), TokenType.Dot));
         } else {
             // Handle multi-character tokens (numbers and identifiers)
-            if (IsInt(src[0])) {
-                let num = "";
-                while (src.length > 0 && IsInt(src[0])) {
+            if (IsInt(src[0]) || (src[0] === "-" && IsInt(src[1]))) {
+                let num = src.shift()!;
+                if (num === "-" && IsInt(src[0])) {
+                    num += src.shift()!;
+                }
+                let hasDecimal = false;
+                while (src.length > 0 && (IsInt(src[0]) || src[0] === ".")) {
+                    if (src[0] === ".") {
+                        if (hasDecimal) break;
+                        hasDecimal = true;
+                    }
                     num += src.shift();
                 }
-
                 tokens.push(CreateToken(num, TokenType.Number));
+            } else if (
+                src[0] == "+" ||
+                src[0] == "-" ||
+                src[0] == "*" ||
+                src[0] == "/" ||
+                src[0] == "%"
+            ) {
+                tokens.push(CreateToken(src.shift(), TokenType.BinaryOperator));
             } else if (IsAlpha(src[0])) {
                 let ident = "";
                 while (src.length > 0 && IsAlpha(src[0])) {
