@@ -27,7 +27,7 @@ print("-------------------------------------------");
 let c = 1;
 
 for(3) {
-    print(c);
+    print("For loop iteration: " + c);
     c = c + 1;
 }
 
@@ -37,7 +37,7 @@ let d = 0;
 
 while(d < 10) {
     d = d + 1;
-    print(d);
+    print("While loop iteration: " + d);
 }
 
 print("-------------------------------------------");
@@ -61,21 +61,23 @@ let f = int(e);
 let g = float(e);
 let h = str(e);
 
-print(e);
-print(e + f);
-print(e + g);
-print(e + " " + h);
+print("e: " + e);
+print("e + int(e): " + e + f);
+print("e + float(e): " + e + g);
+print("e + str(e): " + e + " " + h);
 
 print("-------------------------------------------");
 
 let i = -5;
 let j = 2.5;
 
-print(abs(i));
-print(round(j));
-print(floor(j));
-print(ceil(j));
+print("i: " + i);
+print("j: " + j);
+print("abs(i): " + abs(i));
+print("round(j): " + round(j));
+print("floor(j): " + floor(j));
+print("ceil(j): " + ceil(j));
 
 print("-------------------------------------------");
 
-print(pbver);
+print("PB Version: " + pbver);
