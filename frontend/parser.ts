@@ -97,19 +97,10 @@ export default class Parser {
      */
 
     private ExpectSemicolon(context: string = "statement"): Token {
-        try {
-            return this.Expect(
-                TokenType.Semicolon,
-                `Expected ';' at the end of ${context}.`,
-            );
-        } catch (error) {
-            if (error instanceof ParseError) {
-                throw new ParseError(
-                    `${error.message}\nSemicolons are required after all ${context}s.`,
-                );
-            }
-            throw error;
-        }
+        return this.Expect(
+            TokenType.Semicolon,
+            `Expected ';' at the end of ${context}.`,
+        );
     }
 
     // ===== Statement Parsing Methods =====
