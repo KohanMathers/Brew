@@ -37,7 +37,7 @@ export function CreateGlobalEnv() {
         ["undefined", MakeNull()],
         ["true", MakeBool(true)],
         ["false", MakeBool(false)],
-        ["pbver", MakeString("PaperBag v1.2")],
+        ["pbver", MakeString("PaperBag v1.9")],
         ["print", MakeInternalCall(PrintFunction)],
         ["time", MakeInternalCall(TimeFunction)],
         ["if", MakeInternalCall(IfFunction)],
