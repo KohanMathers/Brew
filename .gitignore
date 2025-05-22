@@ -1,5 +1,6 @@
 .vscode/
 node_modules/
+compiled/
 package-lock.json
 package.json
 .prettierrc

@@ -1,4 +1,8 @@
-# PaperBag v1.9
+# PaperBag v2.0
+
+**Important: PaperBag now includes an experimental compiler that translates `.pbag` scripts into Java code.**
+
+**v1.x interpreter is still supported for development and REPL mode.**
 
 PaperBag is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
@@ -13,6 +17,7 @@ PaperBag is a lightweight, interpreted programming language with JavaScript-like
 - Expression evaluation
 - Proper scoping and environments
 - REPL mode for interactive use
+- **Experimental Java Compiler** for `.pbag` scripts
 
 ## Getting Started
 
@@ -22,10 +27,11 @@ PaperBag is a lightweight, interpreted programming language with JavaScript-like
 
 ### Running PaperBag
 
-PaperBag can run in two modes:
+PaperBag can run in three modes:
 
 1. **REPL Mode** – Interactive shell for testing expressions  
-2. **Script Mode** – Run `.pbag` files from disk
+2. **Script Mode** – Run `.pbag` files from disk  
+3. **Compile Mode** – Compile `.pbag` files into Java code  
 
 ---
 
@@ -34,10 +40,25 @@ PaperBag can run in two modes:
 Run any `.pbag` script by passing the filename as an argument:
 
 ```bash
-deno run --allow-read main.ts your-script.pbag
+deno run --allow-read main.ts run your-script.pbag
 ```
 
 > Note: Only `.pbag` files are supported.
+
+---
+
+#### Compile Mode
+
+Compile a `.pbag` script into Java code:
+
+```bash
+deno run --allow-read --allow-write main.ts compile your-script.pbag [ClassName]
+```
+
+- `your-script.pbag`: The `.pbag` file to compile.
+- `[ClassName]`: (Optional) The name of the generated Java class. Defaults to `Program`.
+
+The compiled Java file will be saved in the `compiled/` directory.
 
 ---
 
@@ -51,7 +72,7 @@ deno run --allow-read main.ts
 
 You’ll enter an interactive prompt:
 ```
-PaperBag Repl v1.2
+PaperBag Repl v2.0
 > print("hello")
 hello
 ```
@@ -177,6 +198,8 @@ It also supports standard comparison operators:
 - `errors.ts` - Custom error classes
 - `expressions.ts` - Expression evaluation
 - `statements.ts` - Statement evaluation
+- `compiler.ts` - Compiles `.pbag` scripts to Java
+- `templates.ts` - Java code templates for compilation
 - `main.ts` - Entry point
 
 ## Error Handling
@@ -269,6 +292,10 @@ Contributions are welcome! Some potential areas for enhancement:
 
 - More comprehensive standard library
 - Type checking
+
+## Need support? Have a suggestion?
+
+Join my Discord! [https://discord.gg/FZuVXszuuM](https://discord.gg/FZuVXszuuM)
 
 ## License
 
