@@ -4,10 +4,6 @@
 class CustomError extends Error {
     constructor(message: string) {
         super(message);
-        // Only capture stack trace if the method exists (Node.js specific)
-        if (typeof Error.captureStackTrace === "function") {
-            Error.captureStackTrace(this, CustomError);
-        }
         this.name = this.constructor.name;
     }
 }
