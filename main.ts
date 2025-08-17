@@ -66,7 +66,8 @@ async function Compile(filename: string) {
 
         const javaCode = compiler.compile(program, className);
 
-        const outputFilename = args[2] + ".java";
+        const outputFilename = (args[2] || "Program") + ".java";
+        await Deno.mkdir("./compiled", { recursive: true });
         await Deno.writeTextFile("./compiled/" + outputFilename, javaCode);
         console.log(`\nJava code written to: ./compiled/${outputFilename}`);
     } catch (error) {
