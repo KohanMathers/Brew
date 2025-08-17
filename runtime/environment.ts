@@ -37,7 +37,7 @@ export function CreateGlobalEnv() {
         ["undefined", MakeNull()],
         ["true", MakeBool(true)],
         ["false", MakeBool(false)],
-        ["pbver", MakeString("PaperBag v2.0")],
+        ["brewver", MakeString("Brew v2.0")],
         ["print", MakeInternalCall(PrintFunction)],
         ["time", MakeInternalCall(TimeFunction)],
         ["if", MakeInternalCall(IfFunction)],
@@ -59,7 +59,7 @@ export function CreateGlobalEnv() {
 }
 
 /**
- * Env class — handles vars, scopes, all that
+ * Env class – handles vars, scopes, all that
  */
 export default class Environment {
     private parent?: Environment;

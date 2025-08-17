@@ -1,10 +1,10 @@
-# PaperBag v2.0
+# Brew v2.0
 
-**Important: PaperBag now includes an experimental compiler that translates `.pbag` scripts into Java code.**
+**Important: Brew now includes an experimental compiler that translates `.brew` scripts into Java code.**
 
 **v1.x interpreter is still supported for development and REPL mode.**
 
-PaperBag is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
+Brew is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
 ## Features
 
@@ -17,7 +17,7 @@ PaperBag is a lightweight, interpreted programming language with JavaScript-like
 - Expression evaluation
 - Proper scoping and environments
 - REPL mode for interactive use
-- **Experimental Java Compiler** for `.pbag` scripts
+- **Experimental Java Compiler** for `.brew` scripts
 
 ## Getting Started
 
@@ -25,37 +25,37 @@ PaperBag is a lightweight, interpreted programming language with JavaScript-like
 
 - [Deno](https://deno.land/) runtime
 
-### Running PaperBag
+### Running Brew
 
-PaperBag can run in three modes:
+Brew can run in three modes:
 
 1. **REPL Mode** – Interactive shell for testing expressions  
-2. **Script Mode** – Run `.pbag` files from disk  
-3. **Compile Mode** – Compile `.pbag` files into Java code  
+2. **Script Mode** – Run `.brew` files from disk  
+3. **Compile Mode** – Compile `.brew` files into Java code  
 
 ---
 
 #### Script Mode (recommended)
 
-Run any `.pbag` script by passing the filename as an argument:
+Run any `.brew` script by passing the filename as an argument:
 
 ```bash
-deno run --allow-read main.ts run your-script.pbag
+deno run --allow-read main.ts run your-script.brew
 ```
 
-> Note: Only `.pbag` files are supported.
+> Note: Only `.brew` files are supported.
 
 ---
 
 #### Compile Mode
 
-Compile a `.pbag` script into Java code:
+Compile a `.brew` script into Java code:
 
 ```bash
-deno run --allow-read --allow-write main.ts compile your-script.pbag [ClassName]
+deno run --allow-read --allow-write main.ts compile your-script.brew [ClassName]
 ```
 
-- `your-script.pbag`: The `.pbag` file to compile.
+- `your-script.brew`: The `.brew` file to compile.
 - `[ClassName]`: (Optional) The name of the generated Java class. Defaults to `Program`.
 
 The compiled Java file will be saved in the `compiled/` directory.
@@ -72,7 +72,7 @@ deno run --allow-read main.ts
 
 You’ll enter an interactive prompt:
 ```
-PaperBag Repl v2.0
+Brew Repl v2.0
 > print("hello")
 hello
 ```
@@ -83,7 +83,7 @@ Type `exit` to quit the REPL.
 
 ### Syntax Requirements
 
-PaperBag requires semicolons (`;`) at the end of every statement. This includes:
+Brew requires semicolons (`;`) at the end of every statement. This includes:
 
 - Variable declarations: `let x = 10;`
 - Expression statements: `x + 5;`
@@ -102,7 +102,7 @@ function add(a, b) {
 ```
 // Variable declaration
 let x = 10;
-let name = "PaperBag";
+let name = "Brew";
 
 // Constants (cannot be reassigned)
 const PI = 3.14159;
@@ -148,7 +148,7 @@ add(5, 3);
 
 ### Operators
 
-PaperBag supports standard arithmetic operators:
+Brew supports standard arithmetic operators:
 
 - Addition: `+`
 - Subtraction: `-`
@@ -198,13 +198,13 @@ It also supports standard comparison operators:
 - `errors.ts` - Custom error classes
 - `expressions.ts` - Expression evaluation
 - `statements.ts` - Statement evaluation
-- `compiler.ts` - Compiles `.pbag` scripts to Java
+- `compiler.ts` - Compiles `.brew` scripts to Java
 - `templates.ts` - Java code templates for compilation
 - `main.ts` - Entry point
 
 ## Error Handling
 
-PaperBag includes robust error handling with detailed error messages for:
+Brew includes robust error handling with detailed error messages for:
 
 - Parse errors
 - Runtime interpretation errors
@@ -303,5 +303,5 @@ Join my Discord! [https://discord.gg/FZuVXszuuM](https://discord.gg/FZuVXszuuM)
 
 ## Acknowledgements
 
-- PaperBag is a fun personal language implementation project
+- Brew is a fun personal language implementation project
 - Special thanks to all modern language implementation resources that inspired this work

@@ -1,5 +1,5 @@
 /**
- * Java code templates for PaperBag language compilation
+ * Java code templates for Brew language compilation
  */
 export const JAVA_TEMPLATES = {
     main_class: `

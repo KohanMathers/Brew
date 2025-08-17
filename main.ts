@@ -26,8 +26,8 @@ async function Run(filename: string) {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    if (!filename.endsWith(".pbag")) {
-        console.error("Only .pbag files are supported.");
+    if (!filename.endsWith(".brew")) {
+        console.error("Only .brew files are supported.");
         Deno.exit(1);
     }
 
@@ -49,8 +49,8 @@ async function Run(filename: string) {
  * @param filename path to the file you wanna compile
  */
 async function Compile(filename: string) {
-    if (!filename.endsWith(".pbag")) {
-        console.error("Only .pbag files are supported.");
+    if (!filename.endsWith(".brew")) {
+        console.error("Only .brew files are supported.");
         Deno.exit(1);
     }
 
@@ -58,9 +58,9 @@ async function Compile(filename: string) {
         const parser = new Parser();
         const compiler = new JavaCompiler();
 
-        const paperBagCode = await Deno.readTextFile(filename);
+        const brewCode = await Deno.readTextFile(filename);
 
-        const program = parser.ProduceAST(paperBagCode);
+        const program = parser.ProduceAST(brewCode);
 
         const className = args[2] || "Program";
 
@@ -79,13 +79,13 @@ async function Compile(filename: string) {
 }
 
 /**
- * REPL mode — for messing around with PaperBag live
+ * REPL mode – for messing around with Brew live
  */
 function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    console.log("\nPaperBag Repl v2.0");
+    console.log("\nBrew Repl v2.0");
 
     while (true) {
         try {

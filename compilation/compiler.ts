@@ -79,7 +79,7 @@ export class JavaCompiler {
 
         const methodBody = func.body
             .map((stmt, index) => {
-                // If it's the last statement and it's an expression, make it a return statement (would have been easier to make 'return' a paperbag keyword, but oh well)
+                // If it's the last statement and it's an expression, make it a return statement (would have been easier to make 'return' a brew keyword, but oh well)
                 if (index === func.body.length - 1 && this.isExpression(stmt)) {
                     return (
                         "        return " +
@@ -169,8 +169,8 @@ export class JavaCompiler {
             }
             case "Identifier": {
                 const idExpr = expr as Identifier;
-                if (idExpr.symbol === "pbver") {
-                    return '"PaperBag v2.0"';
+                if (idExpr.symbol === "brewver") {
+                    return '"Brew v2.0"';
                 }
                 return idExpr.symbol;
             }
@@ -529,7 +529,7 @@ export class JavaCompiler {
     }
 
     /**
-     * Determine Java type from PaperBag expression
+     * Determine Java type from Brew expression
      */
     private getJavaType(expr: Expression): string {
         if (!expr) return "Object";
