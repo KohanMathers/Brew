@@ -1,6 +1,6 @@
 let a = 10;
 let b = 20;
-let name = "PaperBag";
+let name = "Brew";
 
 print("-------------------------------------------");
 
@@ -79,4 +79,4 @@ print("ceil(j): " + ceil(j));
 
 print("-------------------------------------------");
 
-print("PB Version: " + pbver);
+print("Brew Version: " + brewver);
