@@ -160,8 +160,16 @@ export class JavaCompiler {
         ifStmt: IfStatement,
         context: CompilationContext,
     ): void {
-        const condition = this.expressionToJava(ifStmt.condition, context);
-        const boolCondition = this.convertToBoolean(condition);
+        let condition: string;
+
+        // Check if the condition is a comparison expression that returns boolean
+        if (ifStmt.condition.kind === "ComparisonExpression") {
+            condition = this.expressionToJava(ifStmt.condition, context);
+        } else {
+            // For other expressions, convert to boolean
+            const expr = this.expressionToJava(ifStmt.condition, context);
+            condition = this.convertToBoolean(expr);
+        }
 
         const thenBody = ifStmt.thenBranch
             .map((stmt) => "            " + this.statementToJava(stmt, context))
@@ -176,13 +184,13 @@ export class JavaCompiler {
                 )
                 .join("\n");
 
-            ifCode = `if (${boolCondition}) {
+            ifCode = `if (${condition}) {
     ${thenBody}
             } else {
     ${elseBody}
             }`;
         } else {
-            ifCode = `if (${boolCondition}) {
+            ifCode = `if (${condition}) {
     ${thenBody}
             }`;
         }
@@ -455,11 +463,10 @@ export class JavaCompiler {
     }
 
     /**
-     * Convert expression to boolean for conditions
+     * Convert expression to boolean for conditions (for non-comparison expressions)
      */
     private convertToBoolean(expr: string): string {
-        // Just assume it's a boolean expression until I can be bothered to make a proper type system
-        return expr;
+        return `(${expr} != null && !String.valueOf(${expr}).equals("null") && !String.valueOf(${expr}).equals("") && !String.valueOf(${expr}).equals("0") && !String.valueOf(${expr}).equals("false"))`;
     }
 
     /**
