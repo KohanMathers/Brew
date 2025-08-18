@@ -1,6 +1,7 @@
 import Environment from "./environment.ts";
 import { Evaluate } from "./interpreter.ts";
 import {
+    ArrayValue,
     BoolValue,
     FunctionValue,
     InternalCallValue,
@@ -23,26 +24,7 @@ export function TimeFunction() {
  * Prints the values of the specified args
  */
 export function PrintFunction(args: RuntimeValue[]): RuntimeValue {
-    const values = args.map((arg) => {
-        switch (arg.type) {
-            case "string":
-                return (arg as StringValue).value;
-            case "number":
-                return (arg as NumberValue).value;
-            case "boolean":
-                return (arg as BoolValue).value;
-            case "null":
-                return "null";
-            case "object":
-                return "{object}";
-            case "internal-call":
-            case "function":
-                return "{function}";
-            default:
-                return arg;
-        }
-    });
-
+    const values = args.map(valueToString);
     console.log(...values);
     return MakeNull();
 }
@@ -294,5 +276,28 @@ export function CeilFunction(args: RuntimeValue[]): RuntimeValue {
     } else {
         console.log("ceil() only accepts numbers.");
         return MakeNull();
+    }
+}
+
+// Helper function to convert any RuntimeValue to string
+function valueToString(value: RuntimeValue): string {
+    switch (value.type) {
+        case "string":
+            return (value as StringValue).value;
+        case "number":
+            return String((value as NumberValue).value);
+        case "boolean":
+            return String((value as BoolValue).value);
+        case "null":
+            return "null";
+        case "object":
+            return "{object}";
+        case "array": {
+            const arrayValue = value as ArrayValue;
+            const elements = arrayValue.elements.map(valueToString);
+            return `[${elements.join(", ")}]`;
+        }
+        default:
+            return String(value);
     }
 }

@@ -13,6 +13,7 @@ export type NodeType =
     | "ObjectLiteral"
     | "NumericLiteral"
     | "StringLiteral"
+    | "ArrayLiteral"
     | "Identifier"
     | "BinaryExpression"
     | "ComparisonExpression"
@@ -171,6 +172,15 @@ export interface Property extends Expression {
 export interface ObjectLiteral extends Expression {
     kind: "ObjectLiteral";
     properties: Property[];
+}
+
+/**
+ * Array literal node
+*/
+
+export interface ArrayLiteral extends Expression {
+    kind: "ArrayLiteral";
+    elements: Expression[];
 }
 
 // ===== Statement Nodes =====

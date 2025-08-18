@@ -10,6 +10,8 @@ import {
     MakeString,
     StringValue,
     MakeBool,
+    ArrayValue,
+    MakeArray,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
@@ -21,6 +23,7 @@ import {
     IfStatement,
     ForExpression,
     WhileExpression,
+    ArrayLiteral,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import {
@@ -501,4 +504,16 @@ export function EvaluateWhileExpression(
     }
 
     return result;
+}
+
+/**
+ * Evaluates an array expression
+ * Evaluates all elements of an array and returns a runtime value representing the array.
+ */
+export function EvaluateArrayExpression(
+    arrayExpr: ArrayLiteral,
+    env: Environment,
+): ArrayValue {
+    const elements = arrayExpr.elements.map((elem) => Evaluate(elem, env));
+    return MakeArray(elements);
 }

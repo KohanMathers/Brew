@@ -11,7 +11,8 @@ export type ValueType =
     | "boolean"
     | "object"
     | "internal-call"
-    | "function";
+    | "function"
+    | "array";
 
 /**
  * Base interface for all runtime values
@@ -58,6 +59,11 @@ export interface BoolValue extends RuntimeValue {
 export interface ObjectValue extends RuntimeValue {
     type: "object";
     properties: Map<string, RuntimeValue>;
+}
+
+export interface ArrayValue extends RuntimeValue {
+    type: "array";
+    elements: RuntimeValue[];
 }
 
 /**
@@ -118,4 +124,11 @@ export function MakeInternalCall(call: FunctionCall) {
  */
 export function MakeString(s = "") {
     return { type: "string", value: s } as StringValue;
+}
+
+/**
+ * Creates an array value
+ */
+export function MakeArray(elements: RuntimeValue[] = []) {
+    return { type: "array", elements } as ArrayValue;
 }

@@ -8,30 +8,31 @@ Brew is a lightweight, interpreted programming language with JavaScript-like syn
 
 ## Features
 
-- JavaScript-inspired syntax
-- Variables and constants
-- Primitive types: numbers, strings, booleans, null
-- Object literals
-- Functions and function calls
-- Binary operations
-- Expression evaluation
-- Proper scoping and environments
-- REPL mode for interactive use
-- **Experimental Java Compiler** for `.brew` scripts
+* JavaScript-inspired syntax
+* Variables and constants
+* Primitive types: numbers, strings, booleans, null
+* Object literals
+* Arrays
+* Functions and function calls
+* Binary operations
+* Expression evaluation
+* Proper scoping and environments
+* REPL mode for interactive use
+* **Experimental Java Compiler** for `.brew` scripts
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Deno](https://deno.land/) runtime
+* [Deno](https://deno.land/) runtime
 
 ### Running Brew
 
 Brew can run in three modes:
 
-1. **REPL Mode** – Interactive shell for testing expressions  
-2. **Script Mode** – Run `.brew` files from disk  
-3. **Compile Mode** – Compile `.brew` files into Java code  
+1. **REPL Mode** – Interactive shell for testing expressions
+2. **Script Mode** – Run `.brew` files from disk
+3. **Compile Mode** – Compile `.brew` files into Java code
 
 ---
 
@@ -55,8 +56,8 @@ Compile a `.brew` script into Java code:
 deno run --allow-read --allow-write main.ts compile your-script.brew [ClassName]
 ```
 
-- `your-script.brew`: The `.brew` file to compile.
-- `[ClassName]`: (Optional) The name of the generated Java class. Defaults to `Program`.
+* `your-script.brew`: The `.brew` file to compile.
+* `[ClassName]`: (Optional) The name of the generated Java class. Defaults to `Program`.
 
 The compiled Java file will be saved in the `compiled/` directory.
 
@@ -71,6 +72,7 @@ deno run --allow-read main.ts
 ```
 
 You’ll enter an interactive prompt:
+
 ```
 Brew Repl v2.0
 > print("hello")
@@ -85,12 +87,13 @@ Type `exit` to quit the REPL.
 
 Brew requires semicolons (`;`) at the end of every statement. This includes:
 
-- Variable declarations: `let x = 10;`
-- Expression statements: `x + 5;`
-- Function calls: `print("Hello");`
-- Assignment statements: `x = 20;`
+* Variable declarations: `let x = 10;`
+* Expression statements: `x + 5;`
+* Function calls: `print("Hello");`
+* Assignment statements: `x = 20;`
 
 Function declarations with braces do not require semicolons:
+
 ```
 function add(a, b) {
     a + b; // Note: The return expression requires a semicolon
@@ -99,7 +102,7 @@ function add(a, b) {
 
 ### Variables and Assignment
 
-```
+```javascript
 // Variable declaration
 let x = 10;
 let name = "Brew";
@@ -113,7 +116,7 @@ x = 20;
 
 ### Data Types
 
-```
+```javascript
 // Numbers
 let num = 42;
 
@@ -134,9 +137,35 @@ let person = {
 };
 ```
 
+### Arrays
+
+Brew supports arrays as ordered lists of values. Arrays can contain numbers, strings, booleans, objects, or other arrays.
+
+```javascript
+// Array declaration
+let numbers = [1, 2, 3, 4, 5];
+let fruits = ["apple", "banana", "cherry"];
+let mixed = [1, "two", true, null];
+
+// Accessing and modifying elements
+let firstNumber = numbers[0]; // 1
+numbers[0] = 10;              // Change first element to 10
+
+let secondFruit = fruits[1]; // "banana"
+fruits[2] = "orange";        // Change "cherry" to "orange"
+
+// Nested arrays
+let matrix = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+];
+print(matrix[0][1]); // 2
+```
+
 ### Functions
 
-```
+```javascript
 // Function declaration
 function add(a, b) {
     a + b;
@@ -150,73 +179,75 @@ add(5, 3);
 
 Brew supports standard arithmetic operators:
 
-- Addition: `+`
-- Subtraction: `-`
-- Multiplication: `*`
-- Division: `/`
-- Modulo: `%`
+* Addition: `+`
+* Subtraction: `-`
+* Multiplication: `*`
+* Division: `/`
+* Modulo: `%`
 
 It also supports standard comparison operators:
 
-- Equal to: `==`
-- Not equal to: `!=`
-- Greater than `>`
-- Less than `<`
-- Greater or equal to `>=`
-- Less than or equal to `<=`
+* Equal to: `==`
+* Not equal to: `!=`
+* Greater than: `>`
+* Less than: `<`
+* Greater or equal to: `>=`
+* Less than or equal to: `<=`
 
 ### Comments
-- Single line comments are supported provided they begin with `//`. e.g. `// This is a single line comment`
-- Multi-line comments are also supported provided they are wrapped in a `/*` and `*/`. e.g.
-```
+
+* Single line comments start with `//`
+* Multi-line comments are wrapped in `/* */`
+
+```javascript
 /* This is
-    a multi-line
-    comment */
+   a multi-line
+   comment */
 ```
 
 ### Built-in Functions
 
-- `print(...)` - Output values to console
-- `time()` - Get current timestamp
-- `if(condition){true} else {optional false}`  - Execute the specified function based on the condition given
-- `for(amount) {args}` - Execute the specified args the given amount of times
-- `while(condition) {args}` - Execute the specified args while the given condition is true
-- `int(...)` - Convert the inputted value to an integer
-- `float(...)` - Convert the inputted value to a float
-- `str(...)` - Convert the inputted value to a string
-- `nat(...)` - Easter egg function
+* `print(...)` - Output values to console
+* `time()` - Get current timestamp
+* `if(condition){true} else {optional false}`  - Execute the specified function based on the condition given
+* `for(amount) {args}` - Execute the specified args the given amount of times
+* `while(condition) {args}` - Execute the specified args while the given condition is true
+* `int(...)` - Convert the inputted value to an integer
+* `float(...)` - Convert the inputted value to a float
+* `str(...)` - Convert the inputted value to a string
+* `nat(...)` - Easter egg function
 
 ## Project Structure
 
-- `ast.ts` - Abstract Syntax Tree node definitions
-- `lexer.ts` - Tokenizes source code
-- `parser.ts` - Converts tokens to AST
-- `interpreter.ts` - Evaluates AST nodes
-- `environment.ts` - Manages variable scopes
-- `values.ts` - Runtime value types
-- `functions.ts` - Built-in function implementations
-- `errors.ts` - Custom error classes
-- `expressions.ts` - Expression evaluation
-- `statements.ts` - Statement evaluation
-- `compiler.ts` - Compiles `.brew` scripts to Java
-- `templates.ts` - Java code templates for compilation
-- `main.ts` - Entry point
+* `ast.ts` - Abstract Syntax Tree node definitions
+* `lexer.ts` - Tokenizes source code
+* `parser.ts` - Converts tokens to AST
+* `interpreter.ts` - Evaluates AST nodes
+* `environment.ts` - Manages variable scopes
+* `values.ts` - Runtime value types
+* `functions.ts` - Built-in function implementations
+* `errors.ts` - Custom error classes
+* `expressions.ts` - Expression evaluation
+* `statements.ts` - Statement evaluation
+* `compiler.ts` - Compiles `.brew` scripts to Java
+* `templates.ts` - Java code templates for compilation
+* `main.ts` - Entry point
 
 ## Error Handling
 
 Brew includes robust error handling with detailed error messages for:
 
-- Parse errors
-- Runtime interpretation errors
-- Variable declaration/assignment errors
-- Function call errors
-- And more
+* Parse errors
+* Runtime interpretation errors
+* Variable declaration/assignment errors
+* Function call errors
+* And more
 
 ## Examples
 
 ### Basic Example
 
-```
+```javascript
 // Declare variables
 let x = 10;
 let y = 5;
@@ -232,7 +263,7 @@ print("Product:", product);
 
 ### Function Example
 
-```
+```javascript
 function factorial(n) {
     let result = 1;
     
@@ -251,7 +282,7 @@ print("Factorial of", num, "is", factorial(num));
 
 ### Object Example
 
-```
+```javascript
 let person = {
     name: "Alice",
     age: 28,
@@ -264,8 +295,24 @@ person.greet();
 print("Age:", person.age);
 ```
 
-### If/else Example
+### Array Example
+
+```javascript
+let numbers = [1, 2, 3, 4, 5];
+print(numbers[0]); // 1
+numbers[0] = 10;
+print(numbers[0]); // 10
+
+let matrix = [
+    [1, 2],
+    [3, 4]
+];
+print(matrix[1][0]); // 3
 ```
+
+### If/else Example
+
+```javascript
 if(1+1 == 2) {
     print("True");
 } else {
@@ -274,14 +321,16 @@ if(1+1 == 2) {
 ```
 
 ### For Loop Example
-```
+
+```javascript
 for(3) {
     print("This is looping 3 times.")
 }
 ```
 
 ### While Loop Example
-```
+
+```javascript
 let t = 0;
 
 while(t < 10) {
@@ -294,8 +343,8 @@ while(t < 10) {
 
 Contributions are welcome! Some potential areas for enhancement:
 
-- More comprehensive standard library
-- Type checking
+* More comprehensive standard library
+* Type checking
 
 ## Need support? Have a suggestion?
 
@@ -307,5 +356,5 @@ Join my Discord! [https://discord.gg/FZuVXszuuM](https://discord.gg/FZuVXszuuM)
 
 ## Acknowledgements
 
-- Brew is a fun personal language implementation project
-- Special thanks to all modern language implementation resources that inspired this work
+* Brew is a fun personal language implementation project
+* Special thanks to all modern language implementation resources that inspired this work

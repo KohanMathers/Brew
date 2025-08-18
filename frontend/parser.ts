@@ -17,6 +17,7 @@ import {
     MemberExpression,
     ForExpression,
     WhileExpression,
+    ArrayLiteral,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { FunctionError, ParseError } from "./errors.ts";
@@ -363,6 +364,10 @@ export default class Parser {
      * Parses object literals
      */
     private ParseObjectExpression(): Expression {
+        if (this.At().type == TokenType.OpenBracket) {
+            return this.ParseArrayExpression();
+        }
+
         if (this.At().type != TokenType.OpenBrace)
             return this.ParseComparisonExpression();
 
@@ -408,6 +413,38 @@ export default class Parser {
             `Expected '}' to close object literal, found '${this.At().value}'.`,
         );
         return { kind: "ObjectLiteral", properties } as ObjectLiteral;
+    }
+
+    /**
+     * Parses array literal expressions
+     */
+
+    private ParseArrayExpression(): Expression {
+        this.Expect(
+            TokenType.OpenBracket,
+            "Expected '[' to start array literal.",
+        );
+        const elements: Expression[] = [];
+
+        while (this.NotEOF() && this.At().type != TokenType.CloseBracket) {
+            elements.push(this.ParseExpression());
+
+            if (this.At().type == TokenType.Comma) {
+                this.Next();
+            } else if (this.At().type != TokenType.CloseBracket) {
+                throw new ParseError(
+                    `Unexpected token found in array literal: { type: ${
+                        TokenType[this.At().type]
+                    }, value: ${this.At().value} }`,
+                );
+            }
+        }
+
+        this.Expect(
+            TokenType.CloseBracket,
+            "Expected ']' to close array literal.",
+        );
+        return { kind: "ArrayLiteral", elements } as ArrayLiteral;
     }
 
     /**
