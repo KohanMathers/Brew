@@ -15,6 +15,7 @@ export enum TokenType {
     Number,
     Identifier,
     Function,
+    If,
     Equals,
     Comparison,
     Comma,
@@ -42,6 +43,7 @@ const KEYWORDS: Record<string, TokenType> = {
     let: TokenType.Let,
     const: TokenType.Const,
     function: TokenType.Function,
+    if: TokenType.If,
 };
 
 /**

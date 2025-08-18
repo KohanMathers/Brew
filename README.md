@@ -178,7 +178,7 @@ It also supports standard comparison operators:
 
 - `print(...)` - Output values to console
 - `time()` - Get current timestamp
-- `if(condition, true, optional false)`  - Execute the specified function based on the condition given
+- `if(condition){true} else {optional false}`  - Execute the specified function based on the condition given
 - `for(amount) {args}` - Execute the specified args the given amount of times
 - `while(condition) {args}` - Execute the specified args while the given condition is true
 - `int(...)` - Convert the inputted value to an integer
@@ -266,7 +266,11 @@ print("Age:", person.age);
 
 ### If/else Example
 ```
-if((1+1) == 2, print("True"), print("Optionally, false"));
+if(1+1 == 2) {
+    print("True");
+} else {
+    print("False");
+}
 ```
 
 ### For Loop Example

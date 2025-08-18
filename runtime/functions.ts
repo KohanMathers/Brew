@@ -111,7 +111,7 @@ export function IfFunction(
 }
 
 /**
- * An esoteric easter egg function in reference to my girlfriend
+ * An esoteric easter egg function in reference to a friend of mine
  */
 export function NatFunction(args: RuntimeValue[]): RuntimeValue {
     if (args.length > 1) {
@@ -164,8 +164,7 @@ export function NatFunction(args: RuntimeValue[]): RuntimeValue {
         response = `Nat doesn't understand "${input}", so she just smiles and nods as you yap away about it.`;
     }
 
-    console.log(response);
-    return MakeNull();
+    return MakeString(response);
 }
 
 export function IntFunction(args: RuntimeValue[]): RuntimeValue {

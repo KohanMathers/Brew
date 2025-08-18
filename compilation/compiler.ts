@@ -13,6 +13,7 @@ import {
     ObjectLiteral,
     Property,
     AssignmentExpression,
+    IfStatement,
     ForExpression,
     WhileExpression,
 } from "../frontend/ast.ts";
@@ -50,6 +51,9 @@ export class JavaCompiler {
                     stmt as VariableDeclaration,
                     context,
                 );
+                break;
+            case "IfStatement":
+                this.compileIfStatement(stmt as IfStatement, context);
                 break;
             case "CallExpression":
             case "AssignmentExpression":
@@ -147,6 +151,43 @@ export class JavaCompiler {
         } else {
             context.addClassVariable("    private " + varCode);
         }
+    }
+
+    /**
+     * Compile if statements
+     */
+    private compileIfStatement(
+        ifStmt: IfStatement,
+        context: CompilationContext,
+    ): void {
+        const condition = this.expressionToJava(ifStmt.condition, context);
+        const boolCondition = this.convertToBoolean(condition);
+
+        const thenBody = ifStmt.thenBranch
+            .map((stmt) => "            " + this.statementToJava(stmt, context))
+            .join("\n");
+
+        let ifCode: string;
+        if (ifStmt.elseBranch && ifStmt.elseBranch.length > 0) {
+            const elseBody = ifStmt.elseBranch
+                .map(
+                    (stmt) =>
+                        "            " + this.statementToJava(stmt, context),
+                )
+                .join("\n");
+
+            ifCode = `if (${boolCondition}) {
+    ${thenBody}
+            } else {
+    ${elseBody}
+            }`;
+        } else {
+            ifCode = `if (${boolCondition}) {
+    ${thenBody}
+            }`;
+        }
+
+        context.addMainStatement(ifCode);
     }
 
     /**
@@ -354,14 +395,6 @@ export class JavaCompiler {
                     return this.fillTemplate("print", { ARGS: args });
                 }
 
-                // Handle special if function call because I couldn't be simple and make it a keyword now could I?
-                if (
-                    callExpr.caller.kind === "Identifier" &&
-                    (callExpr.caller as Identifier).symbol === "if"
-                ) {
-                    return this.handleIfFunctionCall(callExpr, context);
-                }
-
                 return `${this.expressionToJava(stmt as Expression, context)};`;
             }
             case "ForExpression": {
@@ -419,70 +452,6 @@ export class JavaCompiler {
      */
     private isNumeric(value: string): boolean {
         return /^-?\d+(\.\d+)?$/.test(value);
-    }
-
-    /**
-     * Handle the special if function call (once again, I couldn't be simple and make it a keyword)
-     */
-    private handleIfFunctionCall(
-        callExpr: CallExpression,
-        context: CompilationContext,
-    ): string {
-        if (callExpr.args.length < 2) {
-            return "// Invalid if statement - needs at least 2 arguments";
-        }
-
-        const condition = this.expressionToJava(callExpr.args[0], context);
-
-        // Handle the true branch - if it's a function call, convert it to a statement
-        const trueBranch = this.handleBranchExpression(
-            callExpr.args[1],
-            context,
-        );
-        const falseBranch =
-            callExpr.args.length >= 3
-                ? this.handleBranchExpression(callExpr.args[2], context)
-                : null;
-
-        // Convert condition to boolean if needed
-        const boolCondition = this.convertToBoolean(condition);
-
-        // Convert to proper Java if-else statement
-        if (falseBranch) {
-            return `if (${boolCondition}) {
-            ${trueBranch};
-        } else {
-            ${falseBranch};
-        }`;
-        } else {
-            return `if (${boolCondition}) {
-            ${trueBranch};
-        }`;
-        }
-    }
-
-    /**
-     * Handle branch expressions in if statements
-     */
-    private handleBranchExpression(
-        expr: Expression,
-        context: CompilationContext,
-    ): string {
-        if (expr.kind === "CallExpression") {
-            const callExpr = expr as CallExpression;
-            if (
-                callExpr.caller.kind === "Identifier" &&
-                (callExpr.caller as Identifier).symbol === "print"
-            ) {
-                const args = callExpr.args
-                    .map((arg: Expression) =>
-                        this.expressionToJava(arg, context),
-                    )
-                    .join(' + " " + ');
-                return `System.out.println(${args})`;
-            }
-        }
-        return this.expressionToJava(expr, context);
     }
 
     /**

@@ -15,6 +15,7 @@ import {
     ComparisonExpression,
     ForExpression,
     WhileExpression,
+    IfStatement,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -35,6 +36,7 @@ import {
     EvaluateObjectExpression,
     EvaluateForExpression,
     EvaluateWhileExpression,
+    EvaluateIfStatement,
 } from "../frontend/eval/expressions.ts";
 
 /**
@@ -89,6 +91,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 astNode as FunctionDeclaration,
                 env,
             );
+
+        case "IfStatement":
+            return EvaluateIfStatement(astNode as IfStatement, env);
 
         case "ForExpression":
             return EvaluateForExpression(astNode as ForExpression, env);

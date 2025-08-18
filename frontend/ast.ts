@@ -5,6 +5,7 @@ export type NodeType =
     | "Program"
     | "VariableDeclaration"
     | "FunctionDeclaration"
+    | "IfStatement"
     | "AssignmentExpression"
     | "MemberExpression"
     | "CallExpression"
@@ -170,4 +171,16 @@ export interface Property extends Expression {
 export interface ObjectLiteral extends Expression {
     kind: "ObjectLiteral";
     properties: Property[];
+}
+
+// ===== Statement Nodes =====
+
+/**
+ * If statement node
+ */
+export interface IfStatement extends Stmt {
+    kind: "IfStatement";
+    condition: Expression;
+    thenBranch: Stmt[];
+    elseBranch?: Stmt[];
 }

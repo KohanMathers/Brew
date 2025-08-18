@@ -18,6 +18,7 @@ import {
     ComparisonExpression,
     Identifier,
     ObjectLiteral,
+    IfStatement,
     ForExpression,
     WhileExpression,
 } from "../ast.ts";
@@ -305,6 +306,50 @@ export function EvaluateObjectExpression(
         object.properties.set(key, runtimeValue);
     }
     return object;
+}
+
+/**
+ * Evaluates an if statement
+ * Evaluates the condition and executes the 'then' or 'else' branches based on the condition result.
+ */
+
+export function EvaluateIfStatement(
+    ifStmt: IfStatement,
+    env: Environment,
+): RuntimeValue {
+    const condition = Evaluate(ifStmt.condition, env);
+
+    // Evaluate the condition - truthy values are anything that is not null, false, or 0
+    let conditionResult = false;
+
+    if (condition.type === "boolean") {
+        conditionResult = (condition as BoolValue).value;
+    } else if (condition.type === "number") {
+        conditionResult = (condition as NumberValue).value !== 0;
+    } else if (condition.type === "string") {
+        conditionResult = (condition as StringValue).value !== "";
+    } else if (condition.type === "null") {
+        conditionResult = false;
+    } else {
+        // Objects and functions are considered truthy
+        conditionResult = true;
+    }
+
+    let result: RuntimeValue = MakeNull();
+
+    if (conditionResult) {
+        // Execute the 'then' branch
+        for (const stmt of ifStmt.thenBranch) {
+            result = Evaluate(stmt, env);
+        }
+    } else if (ifStmt.elseBranch) {
+        // Execute the 'else' branch if provided
+        for (const stmt of ifStmt.elseBranch) {
+            result = Evaluate(stmt, env);
+        }
+    }
+
+    return result;
 }
 
 /**

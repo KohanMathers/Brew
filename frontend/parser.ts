@@ -9,6 +9,7 @@ import {
     Identifier,
     VariableDeclaration,
     FunctionDeclaration,
+    IfStatement,
     AssignmentExpression,
     Property,
     ObjectLiteral,
@@ -115,6 +116,8 @@ export default class Parser {
                 return this.ParseVariableDeclaration();
             case TokenType.Function:
                 return this.ParseFunctionDeclaration();
+            case TokenType.If:
+                return this.ParseIfStatement();
             case TokenType.Identifier: {
                 if (this.At().value === "for") {
                     return this.ParseForExpression();
@@ -277,6 +280,56 @@ export default class Parser {
         } as FunctionDeclaration;
 
         return func;
+    }
+
+    /**
+     * Parses an if statement
+     */
+
+    private ParseIfStatement(): Stmt {
+        this.Expect(TokenType.If, "Expected 'if' keyword.");
+        this.Expect(TokenType.OpenParen, "Expected '(' after 'if' keyword.");
+
+        const condition = this.ParseExpression();
+        this.Expect(TokenType.CloseParen, "Expected ')' after 'if' condition.");
+
+        this.Expect(TokenType.OpenBrace, "Expected '{' to start 'if' block.");
+        const thenBranch: Stmt[] = [];
+
+        while (this.NotEOF() && this.At().type != TokenType.CloseBrace) {
+            thenBranch.push(this.ParseStatement());
+        }
+
+        this.Expect(TokenType.CloseBrace, "Expected '}' to close 'if' block.");
+
+        let elseBranch: Stmt[] | undefined = undefined;
+        if (
+            this.At().type == TokenType.Identifier &&
+            this.At().value === "else"
+        ) {
+            this.Next();
+            this.Expect(
+                TokenType.OpenBrace,
+                "Expected '{' to start 'else' block.",
+            );
+
+            elseBranch = [];
+            while (this.NotEOF() && this.At().type != TokenType.CloseBrace) {
+                elseBranch.push(this.ParseStatement());
+            }
+
+            this.Expect(
+                TokenType.CloseBrace,
+                "Expected '}' to close 'else' block.",
+            );
+        }
+
+        return {
+            kind: "IfStatement",
+            condition: condition,
+            thenBranch,
+            elseBranch,
+        } as IfStatement;
     }
 
     // ===== Expression Parsing Methods =====
