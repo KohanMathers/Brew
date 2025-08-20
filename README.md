@@ -26,6 +26,31 @@ Brew is a lightweight, interpreted programming language with JavaScript-like syn
 
 * [Deno](https://deno.land/) runtime
 
+### Recommended Scripts for Building to JS File
+
+For easier distribution and deployment, you can build Brew to a JavaScript file using these npm scripts:
+
+```json
+{
+    "scripts": {
+        "build": "node build.mjs",
+        "build:ts": "deno run --allow-read --allow-write --allow-run build.ts",
+        "dev": "deno run --allow-read --allow-write --allow-run src/main.ts",
+        "start": "node dist/main.js",
+        "clean": "rm -rf dist temp-build tsconfig.build.json",
+        "onefile": "npx esbuild dist/main.js --bundle --platform=node --outfile=brew-compiler.js"
+    }
+}
+```
+
+Usage:
+- `npm run build` - Build the project using the build script
+- `npm run build:ts` - Build using TypeScript with Deno
+- `npm run dev` - Run in development mode with Deno
+- `npm run start` - Start the built JavaScript version
+- `npm run clean` - Clean build artifacts
+- `npm run onefile` - Bundle everything into a single JavaScript file
+
 ### Running Brew
 
 Brew can run in three modes:
@@ -71,7 +96,7 @@ To launch the REPL, run without any arguments:
 deno run --allow-read src/main.ts
 ```
 
-You’ll enter an interactive prompt:
+You'll enter an interactive prompt:
 
 ```
 Brew Repl v2.0
