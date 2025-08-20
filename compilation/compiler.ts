@@ -16,6 +16,7 @@ import {
     IfStatement,
     ForExpression,
     WhileExpression,
+    ArrayLiteral,
 } from "../frontend/ast.ts";
 import { JAVA_TEMPLATES, TemplateKey } from "./templates.ts";
 
@@ -214,7 +215,7 @@ export class JavaCompiler {
             }
             case "StringLiteral": {
                 const strExpr = expr as StringLiteral;
-                return `"${strExpr.value.replace(/"/g, '\\"')}"`;
+                return `"${strExpr.value.replace(/"/g, '\"')}"`;
             }
             case "Identifier": {
                 const idExpr = expr as Identifier;
@@ -283,10 +284,19 @@ export class JavaCompiler {
                 const props = objExpr.properties
                     .map(
                         (prop: Property) =>
-                            `put("${prop.key}", ${prop.value ? this.expressionToJava(prop.value, context) : "null"})`,
+                            `put(\"${prop.key}\", ${prop.value ? this.expressionToJava(prop.value, context) : "null"})`,
                     )
                     .join("; ");
                 return `new HashMap<String, Object>() {{ ${props}; }}`;
+            }
+            case "ArrayLiteral": {
+                const arrExpr = expr as ArrayLiteral;
+                const elements: string[] = arrExpr.elements.map(
+                    (el: Expression) => this.expressionToJava(el, context),
+                );
+
+                // Don't create a raw array printing it messes up, use an ArrayList
+                return `new java.util.ArrayList<Object>() {{ ${elements.map((el) => `add(${el});`).join(" ")} }}`;
             }
             default:
                 return "null";
@@ -365,28 +375,6 @@ export class JavaCompiler {
                     context,
                 );
                 const value = this.expressionToJava(assignExpr.value, context);
-
-                // Check if the assignment involves a BinaryExpression with "+"
-                if (
-                    assignExpr.value.kind === "BinaryExpression" &&
-                    (assignExpr.value as BinaryExpression).operator === "+"
-                ) {
-                    const binaryExpr = assignExpr.value as BinaryExpression;
-                    const left = this.expressionToJava(
-                        binaryExpr.left,
-                        context,
-                    );
-                    const right = this.expressionToJava(
-                        binaryExpr.right,
-                        context,
-                    );
-
-                    // Use integer arithmetic if both sides are numeric
-                    if (this.isNumeric(left) && this.isNumeric(right)) {
-                        return `${assignee} = ${left} + ${right};`;
-                    }
-                }
-
                 return `${assignee} = ${value};`;
             }
             case "CallExpression": {
@@ -519,6 +507,8 @@ export class JavaCompiler {
                 return "String";
             case "ObjectLiteral":
                 return "HashMap<String, Object>";
+            case "ArrayLiteral":
+                return "java.util.ArrayList<Object>";
             case "CallExpression": {
                 const callExpr = expr as CallExpression;
                 if (callExpr.caller.kind === "Identifier") {

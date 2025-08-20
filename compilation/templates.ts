@@ -51,6 +51,8 @@ public class {{CLASS_NAME}} {
     ternary_if: `{{CONDITION}} ? {{TRUE_EXPR}} : {{FALSE_EXPR}}`,
 
     print: `System.out.println({{ARGS}});`,
+
+    array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`,
 } as const;
 
 export type TemplateKey = keyof typeof JAVA_TEMPLATES;
