@@ -41,7 +41,7 @@ Brew can run in three modes:
 Run any `.brew` script by passing the filename as an argument:
 
 ```bash
-deno run --allow-read main.ts run your-script.brew
+deno run --allow-read src/main.ts run your-script.brew
 ```
 
 > Note: Only `.brew` files are supported.
@@ -53,7 +53,7 @@ deno run --allow-read main.ts run your-script.brew
 Compile a `.brew` script into Java code:
 
 ```bash
-deno run --allow-read --allow-write main.ts compile your-script.brew [ClassName]
+deno run --allow-read --allow-write src/main.ts compile your-script.brew [ClassName]
 ```
 
 * `your-script.brew`: The `.brew` file to compile.
@@ -68,7 +68,7 @@ The compiled Java file will be saved in the `compiled/` directory.
 To launch the REPL, run without any arguments:
 
 ```bash
-deno run --allow-read main.ts
+deno run --allow-read src/main.ts
 ```
 
 You’ll enter an interactive prompt:

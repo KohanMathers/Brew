@@ -1,7 +1,7 @@
-import Parser from "./frontend/parser.ts";
-import { Evaluate } from "./runtime/interpreter.ts";
-import { CreateGlobalEnv } from "./runtime/environment.ts";
-import { JavaCompiler } from "./compilation/compiler.ts";
+import Parser from "../frontend/parser.ts";
+import { Evaluate } from "../runtime/interpreter.ts";
+import { CreateGlobalEnv } from "../runtime/environment.ts";
+import { JavaCompiler } from "../compilation/compiler.ts";
 
 const args = Deno.args;
 
