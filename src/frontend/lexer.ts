@@ -1,3 +1,4 @@
+import { compat } from "../compat.ts";
 import { ParseError } from "./errors.ts";
 
 /**
@@ -195,7 +196,7 @@ export function tokenize(sourceCode: string): Token[] {
                 tokens.push(CreateToken("!=", TokenType.Comparison));
             } else {
                 console.log("Unrecognised character in source:", src[0]);
-                Deno.exit(1);
+                compat.exit(1);
             }
         } else if (src[0] == ">") {
             if (src.length > 1 && src[1] == "=") {
@@ -268,7 +269,7 @@ export function tokenize(sourceCode: string): Token[] {
             } else {
                 // Handle unrecognized characters
                 console.log("Unrecognised character in source:", src[0]);
-                Deno.exit(1);
+                compat.exit(1);
             }
         }
     }

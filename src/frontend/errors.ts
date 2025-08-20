@@ -4,7 +4,8 @@
 class CustomError extends Error {
     constructor(message: string) {
         super(message);
-        if (Error.captureStackTrace) {
+        // Only capture stack trace if the method exists (Node.js specific)
+        if (typeof Error.captureStackTrace === "function") {
             Error.captureStackTrace(this, CustomError);
         }
         this.name = this.constructor.name;
@@ -30,7 +31,7 @@ export class InterpretError extends CustomError {
 }
 
 /**
- * Thrown when there’s an issue with calculation operations
+ * Thrown when there's an issue with calculation operations
  */
 export class CalculationError extends CustomError {
     constructor(message: string) {
@@ -39,7 +40,7 @@ export class CalculationError extends CustomError {
 }
 
 /**
- * Thrown when there’s an issue with comparison operations
+ * Thrown when there's an issue with comparison operations
  */
 export class ComparisonError extends CustomError {
     constructor(message: string) {
@@ -57,7 +58,7 @@ export class DeclarationError extends CustomError {
 }
 
 /**
- * Thrown when there’s an issue resolving a variable
+ * Thrown when there's an issue resolving a variable
  */
 export class ResolutionError extends CustomError {
     constructor(message: string) {

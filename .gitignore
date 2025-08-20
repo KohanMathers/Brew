@@ -4,4 +4,4 @@ compiled/
 package-lock.json
 package.json
 .prettierrc
-planning.ts
+dist/

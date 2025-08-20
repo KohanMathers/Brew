@@ -1,9 +1,12 @@
-import Parser from "../frontend/parser.ts";
-import { Evaluate } from "../runtime/interpreter.ts";
-import { CreateGlobalEnv } from "../runtime/environment.ts";
-import { JavaCompiler } from "../compilation/compiler.ts";
+import Parser from "./frontend/parser.ts";
+import { Evaluate } from "./runtime/interpreter.ts";
+import { CreateGlobalEnv } from "./runtime/environment.ts";
+import { JavaCompiler } from "./compilation/compiler.ts";
+import { compat } from "./compat.ts";
+import * as readline from "node:readline";
+import process from "node:process";
 
-const args = Deno.args;
+const args = compat.args;
 
 if (args.length > 0) {
     if (args[0] === "run") {
@@ -12,7 +15,7 @@ if (args.length > 0) {
         Compile(args[1]);
     } else {
         console.error("Unknown command: " + args[0]);
-        Deno.exit(1);
+        compat.exit(1);
     }
 } else {
     Repl();
@@ -28,11 +31,11 @@ async function Run(filename: string) {
 
     if (!filename.endsWith(".brew")) {
         console.error("Only .brew files are supported.");
-        Deno.exit(1);
+        compat.exit(1);
     }
 
     try {
-        const input = await Deno.readTextFile(filename);
+        const input = await compat.readTextFile(filename);
         const program = parser.ProduceAST(input);
         Evaluate(program, env);
     } catch (error) {
@@ -51,14 +54,14 @@ async function Run(filename: string) {
 async function Compile(filename: string) {
     if (!filename.endsWith(".brew")) {
         console.error("Only .brew files are supported.");
-        Deno.exit(1);
+        compat.exit(1);
     }
 
     try {
         const parser = new Parser();
         const compiler = new JavaCompiler();
 
-        const brewCode = await Deno.readTextFile(filename);
+        const brewCode = await compat.readTextFile(filename);
 
         const program = parser.ProduceAST(brewCode);
 
@@ -67,8 +70,8 @@ async function Compile(filename: string) {
         const javaCode = compiler.compile(program, className);
 
         const outputFilename = (args[2] || "Program") + ".java";
-        await Deno.mkdir("./compiled", { recursive: true });
-        await Deno.writeTextFile("./compiled/" + outputFilename, javaCode);
+        await compat.mkdir("./compiled");
+        await compat.writeTextFile("./compiled/" + outputFilename, javaCode);
         console.log(`\nJava code written to: ./compiled/${outputFilename}`);
     } catch (error) {
         if (error instanceof Error) {
@@ -80,7 +83,7 @@ async function Compile(filename: string) {
 }
 
 /**
- * REPL mode – for messing around with Brew live
+ * REPL mode - for messing around with Brew live
  */
 function Repl() {
     const parser = new Parser();
@@ -88,24 +91,36 @@ function Repl() {
 
     console.log("\nBrew Repl v2.0");
 
-    while (true) {
-        try {
-            const input = prompt("> ");
+    // For Node.js we need to use a different approach for REPL input
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
 
+    function promptUser() {
+        rl.question("> ", (input: string) => {
             if (!input) {
-                continue;
+                promptUser();
+                return;
             } else if (input.includes("exit")) {
-                Deno.exit(1);
+                rl.close();
+                compat.exit(1);
             }
 
-            const program = parser.ProduceAST(input);
-            Evaluate(program, env);
-        } catch (error) {
-            if (error instanceof Error) {
-                console.error(`${error.name}: ${error.message}`);
-            } else {
-                console.error("Unknown error:", error);
+            try {
+                const program = parser.ProduceAST(input);
+                Evaluate(program, env);
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error(`${error.name}: ${error.message}`);
+                } else {
+                    console.error("Unknown error:", error);
+                }
             }
-        }
+
+            promptUser();
+        });
     }
+
+    promptUser();
 }
