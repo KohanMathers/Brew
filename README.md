@@ -4,6 +4,8 @@
 
 **v1.x interpreter is still supported for development and REPL mode.**
 
+**New: Brew now works within the JVM! See [BREW-JVM.md](BREW-JVM.md) for Java integration details.**
+
 Brew is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
 ## Features
@@ -20,6 +22,16 @@ Brew is a lightweight, interpreted programming language with JavaScript-like syn
 * Proper error handling with detailed error messages
 * REPL mode for interactive development
 * **Experimental Java Compiler** for `.brew` scripts
+* **JVM Integration** - Run Brew code directly within Java applications (see [BREW-JVM.md](BREW-JVM.md))
+
+## Platform Support
+
+Brew runs on multiple platforms:
+
+- **Native**: TypeScript/Deno runtime (this implementation)
+- **JVM**: Java integration via GraalVM bridge - perfect for Bukkit/Spigot plugins and general Java applications
+
+For JVM usage, including Minecraft plugin development, see **[BREW-JVM.md](BREW-JVM.md)** for installation, API reference, and examples.
 
 ## Getting Started
 
@@ -717,6 +729,17 @@ deno run --allow-read --allow-write src/main.ts compile hello.brew Hello
 * Some dynamic features may not translate perfectly
 * Type inference is basic
 * Generated code may not be optimally efficient
+
+## JVM Integration
+
+**Brew now runs natively within the JVM!** This makes it perfect for:
+
+- **Minecraft plugin scripting** (Bukkit/Spigot/Paper)
+- **Java application scripting**
+- **Runtime code generation**
+- **Configuration scripting**
+
+For complete JVM integration documentation, including installation instructions, API reference, and examples, see **[BREW-JVM.md](BREW-JVM.md)**.
 
 ## Contributing
 
