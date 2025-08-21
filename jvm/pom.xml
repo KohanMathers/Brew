@@ -28,9 +28,25 @@
             <artifactId>js-scriptengine</artifactId>
             <version>24.2.2</version>
         </dependency>
+        <!-- GraalVM Regex support -->
+        <dependency>
+            <groupId>org.graalvm.regex</groupId>
+            <artifactId>regex</artifactId>
+            <version>24.2.2</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <!-- Explicitly define resources -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+
         <plugins>
             <!-- Compiler plugin -->
             <plugin>
@@ -60,6 +76,7 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>org.brew.BrewBridge</mainClass>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                         </configuration>
                     </execution>
