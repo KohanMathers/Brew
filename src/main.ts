@@ -89,7 +89,7 @@ function isDeno(): boolean {
 }
 
 /**
- * Cross-platform REPL that works in both Deno and Node.js
+ * Cross-platform REPL that works universally
  */
 async function Repl() {
     const parser = new Parser();
@@ -98,90 +98,64 @@ async function Repl() {
     console.log("\nBrew Repl v2.2.0");
     console.log("Type 'exit' to quit");
 
-    if (isDeno()) {
-        await denoRepl(parser, env);
+    if (typeof Deno !== "undefined") {
+        await universalRepl(parser, env, async () => prompt("> "));
+    } else if (typeof process !== "undefined" && process.versions?.node) {
+        const readline = await import("node:readline");
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+
+        await universalRepl(
+            parser,
+            env,
+            () =>
+                new Promise<string | null>((resolve) =>
+                    rl.question("> ", (answer) => resolve(answer)),
+                ),
+        );
+        rl.close();
+    } else if (typeof Java !== "undefined") {
+        // JVM version: use console input via Scanner
+        const Scanner = Java.type("java.util.Scanner");
+        const scanner = new Scanner(Java.type("java.lang.System").in);
+        await universalRepl(parser, env, async () => scanner.nextLine());
     } else {
-        await nodeRepl(parser, env);
-    }
-}
-
-/**
- * Deno-specific REPL implementation
- */
-async function denoRepl(parser: Parser, env: any) {
-    while (true) {
-        const input = prompt("> ");
-
-        if (input === null || input === "exit") {
-            console.log("Goodbye!");
-            break;
-        }
-
-        if (!input.trim()) {
-            continue;
-        }
-
-        try {
-            const program = parser.ProduceAST(input);
-            Evaluate(program, env);
-        } catch (error) {
-            if (error instanceof Error) {
-                console.error(`${error.name}: ${error.message}`);
-            } else {
-                console.error("Unknown error:", error);
-            }
-        }
+        throw new Error("No REPL supported in this environment");
     }
 
     compat.exit(0);
 }
 
 /**
- * Node.js-specific REPL implementation
+ * Universal REPL handler
+ * @param parser parser instance
+ * @param env environment
+ * @param readLine async function returning user input
  */
-async function nodeRepl(parser: Parser, env: any) {
-    // Dynamic import for Node.js only
-    const readline = await import("node:readline");
-    const process = await import("node:process");
+async function universalRepl(
+    parser: Parser,
+    env: any,
+    readLine: () => Promise<string | null>,
+) {
+    while (true) {
+        const input = await readLine();
 
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
+        if (input === null || input.trim() === "exit") {
+            console.log("Goodbye!");
+            break;
+        }
 
-    rl.on("SIGINT", () => {
-        console.log("\nGoodbye!");
-        rl.close();
-        compat.exit(0);
-    });
+        if (!input.trim()) continue;
 
-    function promptUser(): Promise<void> {
-        return new Promise((resolve) => {
-            rl.question("> ", (input: string) => {
-                if (input.trim() === "exit") {
-                    console.log("Goodbye!");
-                    rl.close();
-                    compat.exit(0);
-                    return;
-                }
-
-                if (input.trim()) {
-                    try {
-                        const program = parser.ProduceAST(input);
-                        Evaluate(program, env);
-                    } catch (error) {
-                        if (error instanceof Error) {
-                            console.error(`${error.name}: ${error.message}`);
-                        } else {
-                            console.error("Unknown error:", error);
-                        }
-                    }
-                }
-
-                promptUser().then(resolve);
-            });
-        });
+        try {
+            const program = parser.ProduceAST(input);
+            Evaluate(program, env);
+        } catch (error) {
+            if (error instanceof Error)
+                console.error(`${error.name}: ${error.message}`);
+            else console.error("Unknown error:", error);
+        }
     }
-
-    await promptUser();
 }
