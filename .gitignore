@@ -7,3 +7,4 @@ package.json
 dist/
 update-version.js
 jvm/target
+brew-engine.js

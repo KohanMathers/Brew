@@ -98,41 +98,26 @@ async function Repl() {
     console.log("\nBrew Repl v2.2.0");
     console.log("Type 'exit' to quit");
 
-    if (typeof Deno !== "undefined") {
-        await universalRepl(parser, env, async () => prompt("> "));
-    } else if (typeof process !== "undefined" && process.versions?.node) {
-        const readline = await import("node:readline");
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
+    let readLine: () => Promise<string | null>;
 
-        await universalRepl(
-            parser,
-            env,
-            () =>
-                new Promise<string | null>((resolve) =>
-                    rl.question("> ", (answer) => resolve(answer)),
-                ),
-        );
-        rl.close();
+    if (typeof Deno !== "undefined") {
+        // Deno / Browser
+        readLine = async () => prompt("> ");
     } else if (typeof Java !== "undefined") {
-        // JVM version: use console input via Scanner
+        // JVM
         const Scanner = Java.type("java.util.Scanner");
         const scanner = new Scanner(Java.type("java.lang.System").in);
-        await universalRepl(parser, env, async () => scanner.nextLine());
+        readLine = async () => scanner.nextLine();
     } else {
         throw new Error("No REPL supported in this environment");
     }
 
+    await universalRepl(parser, env, readLine);
     compat.exit(0);
 }
 
 /**
  * Universal REPL handler
- * @param parser parser instance
- * @param env environment
- * @param readLine async function returning user input
  */
 async function universalRepl(
     parser: Parser,

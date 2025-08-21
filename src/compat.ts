@@ -15,28 +15,19 @@ declare global {
     var Java: any;
 }
 
-const isNode = typeof process !== "undefined" && process.versions?.node;
 const isDeno = typeof Deno !== "undefined";
 const isJava = typeof Java !== "undefined";
 
 export const compat = {
-    args: isDeno && Deno ? Deno.args : isNode ? process.argv.slice(2) : [],
+    args: isDeno && Deno ? Deno.args : [],
 
     exit: (code: number): never => {
         if (isDeno && Deno) return Deno.exit(code);
-        if (isNode) {
-            process.exit(code);
-            throw new Error("Process exited");
-        }
         throw new Error(`exit(${code}) called in unsupported environment`);
     },
 
     readTextFile: async (path: string): Promise<string> => {
         if (isDeno && Deno) return await Deno.readTextFile(path);
-        if (isNode) {
-            const { readFile } = await import("node:fs/promises");
-            return await readFile(path, "utf8");
-        }
         if (isJava && Java) {
             const Files = Java.type("java.nio.file.Files");
             const Paths = Java.type("java.nio.file.Paths");
@@ -48,11 +39,6 @@ export const compat = {
 
     writeTextFile: async (path: string, data: string): Promise<void> => {
         if (isDeno && Deno) return await Deno.writeTextFile(path, data);
-        if (isNode) {
-            const { writeFile } = await import("node:fs/promises");
-            await writeFile(path, data);
-            return;
-        }
         if (isJava && Java) {
             const Files = Java.type("java.nio.file.Files");
             const Paths = Java.type("java.nio.file.Paths");
@@ -72,11 +58,6 @@ export const compat = {
 
     mkdir: async (path: string): Promise<void> => {
         if (isDeno && Deno) return await Deno.mkdir(path, { recursive: true });
-        if (isNode) {
-            const { mkdir } = await import("node:fs/promises");
-            await mkdir(path, { recursive: true });
-            return;
-        }
         if (isJava && Java) {
             const Files = Java.type("java.nio.file.Files");
             const Paths = Java.type("java.nio.file.Paths");
