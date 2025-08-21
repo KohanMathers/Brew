@@ -1,10 +1,9 @@
+// deno-lint-ignore-file
 import Parser from "./frontend/parser.ts";
 import { Evaluate } from "./runtime/interpreter.ts";
 import { CreateGlobalEnv } from "./runtime/environment.ts";
 import { JavaCompiler } from "./compilation/compiler.ts";
 import { compat } from "./compat.ts";
-import * as readline from "node:readline";
-import process from "node:process";
 
 const args = compat.args;
 
@@ -83,44 +82,106 @@ async function Compile(filename: string) {
 }
 
 /**
- * REPL mode - for messing around with Brew live
+ * Detect if we're running in Deno or Node.js
  */
-function Repl() {
+function isDeno(): boolean {
+    return typeof Deno !== "undefined";
+}
+
+/**
+ * Cross-platform REPL that works in both Deno and Node.js
+ */
+async function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
     console.log("\nBrew Repl v2.0");
+    console.log("Type 'exit' to quit");
 
-    // For Node.js we need to use a different approach for REPL input
+    if (isDeno()) {
+        await denoRepl(parser, env);
+    } else {
+        await nodeRepl(parser, env);
+    }
+}
+
+/**
+ * Deno-specific REPL implementation
+ */
+async function denoRepl(parser: Parser, env: any) {
+    while (true) {
+        const input = prompt("> ");
+
+        if (input === null || input === "exit") {
+            console.log("Goodbye!");
+            break;
+        }
+
+        if (!input.trim()) {
+            continue;
+        }
+
+        try {
+            const program = parser.ProduceAST(input);
+            Evaluate(program, env);
+        } catch (error) {
+            if (error instanceof Error) {
+                console.error(`${error.name}: ${error.message}`);
+            } else {
+                console.error("Unknown error:", error);
+            }
+        }
+    }
+
+    compat.exit(0);
+}
+
+/**
+ * Node.js-specific REPL implementation
+ */
+async function nodeRepl(parser: Parser, env: any) {
+    // Dynamic import for Node.js only
+    const readline = await import("node:readline");
+    const process = await import("node:process");
+
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
     });
 
-    function promptUser() {
-        rl.question("> ", (input: string) => {
-            if (!input) {
-                promptUser();
-                return;
-            } else if (input.includes("exit")) {
-                rl.close();
-                compat.exit(1);
-            }
+    rl.on("SIGINT", () => {
+        console.log("\nGoodbye!");
+        rl.close();
+        compat.exit(0);
+    });
 
-            try {
-                const program = parser.ProduceAST(input);
-                Evaluate(program, env);
-            } catch (error) {
-                if (error instanceof Error) {
-                    console.error(`${error.name}: ${error.message}`);
-                } else {
-                    console.error("Unknown error:", error);
+    function promptUser(): Promise<void> {
+        return new Promise((resolve) => {
+            rl.question("> ", (input: string) => {
+                if (input.trim() === "exit") {
+                    console.log("Goodbye!");
+                    rl.close();
+                    compat.exit(0);
+                    return;
                 }
-            }
 
-            promptUser();
+                if (input.trim()) {
+                    try {
+                        const program = parser.ProduceAST(input);
+                        Evaluate(program, env);
+                    } catch (error) {
+                        if (error instanceof Error) {
+                            console.error(`${error.name}: ${error.message}`);
+                        } else {
+                            console.error("Unknown error:", error);
+                        }
+                    }
+                }
+
+                promptUser().then(resolve);
+            });
         });
     }
 
-    promptUser();
+    await promptUser();
 }
