@@ -2,7 +2,7 @@
 
 **Important: Brew now includes an experimental compiler that translates `.brew` scripts into Java code.**
 
-**v2.x interpreter is still supported for development and REPL mode.**
+**v1.x interpreter is still supported for development and REPL mode.**
 
 Brew is a lightweight, interpreted programming language with JavaScript-like syntax. This implementation includes a complete lexer, parser, and interpreter written in TypeScript and running on Deno.
 
