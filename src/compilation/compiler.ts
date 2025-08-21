@@ -92,6 +92,7 @@ export class JavaCompiler {
                 }
 
                 if (stmt.kind === "ReturnStatement") {
+                    // deno-lint-ignore no-explicit-any
                     const returnExpr = (stmt as any).expression;
                     return returnExpr
                         ? "        return " +
@@ -407,12 +408,14 @@ export class JavaCompiler {
                     context.getVariableType((expr as Identifier).symbol) ===
                     "String"
                 );
+            // deno-lint-ignore no-case-declarations
             case "CallExpression":
                 const call = expr as CallExpression;
                 return (
                     call.caller.kind === "Identifier" &&
                     (call.caller as Identifier).symbol === "str"
                 );
+            // deno-lint-ignore no-case-declarations
             case "BinaryExpression":
                 const binExpr = expr as BinaryExpression;
                 if (binExpr.operator === "+") {
@@ -477,6 +480,7 @@ export class JavaCompiler {
                     context.getVariableType((expr as Identifier).symbol) ===
                     "int"
                 );
+            // deno-lint-ignore no-case-declarations
             case "CallExpression":
                 const call = expr as CallExpression;
                 return (
@@ -595,6 +599,7 @@ export class JavaCompiler {
                 );
                 return "";
             case "ReturnStatement": {
+                // deno-lint-ignore no-explicit-any
                 const returnExpr = (stmt as any).expression;
                 return returnExpr
                     ? `return ${this.expressionToJava(returnExpr, context)};`
