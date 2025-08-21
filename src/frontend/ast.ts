@@ -5,6 +5,7 @@ export type NodeType =
     | "Program"
     | "VariableDeclaration"
     | "FunctionDeclaration"
+    | "ReturnStatement"
     | "IfStatement"
     | "AssignmentExpression"
     | "MemberExpression"
@@ -176,7 +177,7 @@ export interface ObjectLiteral extends Expression {
 
 /**
  * Array literal node
-*/
+ */
 
 export interface ArrayLiteral extends Expression {
     kind: "ArrayLiteral";
@@ -193,4 +194,12 @@ export interface IfStatement extends Stmt {
     condition: Expression;
     thenBranch: Stmt[];
     elseBranch?: Stmt[];
+}
+
+/**
+ * Return statement node
+ */
+export interface ReturnStatement extends Stmt {
+    kind: "ReturnStatement";
+    value?: Expression;
 }

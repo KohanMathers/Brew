@@ -12,7 +12,8 @@ export type ValueType =
     | "object"
     | "internal-call"
     | "function"
-    | "array";
+    | "array"
+    | "return";
 
 /**
  * Base interface for all runtime values
@@ -61,6 +62,17 @@ export interface ObjectValue extends RuntimeValue {
     properties: Map<string, RuntimeValue>;
 }
 
+/**
+ * Return value type in the language
+ */
+export interface ReturnValue extends RuntimeValue {
+    type: "return";
+    value: RuntimeValue;
+}
+
+/**
+ * Array value type in the language
+ */
 export interface ArrayValue extends RuntimeValue {
     type: "array";
     elements: RuntimeValue[];
@@ -131,4 +143,11 @@ export function MakeString(s = "") {
  */
 export function MakeArray(elements: RuntimeValue[] = []) {
     return { type: "array", elements } as ArrayValue;
+}
+
+/**
+ * Creates a return value
+ */
+export function MakeReturn(value: RuntimeValue) {
+    return { type: "return", value } as ReturnValue;
 }

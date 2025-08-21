@@ -34,6 +34,7 @@ export enum TokenType {
     Let,
     Const,
     String,
+    Return,
     EOF,
 }
 
@@ -45,6 +46,7 @@ const KEYWORDS: Record<string, TokenType> = {
     const: TokenType.Const,
     function: TokenType.Function,
     if: TokenType.If,
+    return: TokenType.Return,
 };
 
 /**

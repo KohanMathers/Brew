@@ -9,7 +9,7 @@ print("Hello world");
 print("-------------------------------------------");
 
 function add(a, b) {
-    a + b;
+    return a + b;
 }
 
 add(5, 3);
@@ -90,3 +90,18 @@ print("-------------------------------------------");
 let arr = [1, 2, 1 + 2];
 
 print(arr);
+
+print("-------------------------------------------");
+
+let k = 9;
+let l = 1;
+
+function addbutreturnearly(a, b) {
+    return a - b;
+    l = l - 1;
+}
+
+let m = addbutreturnearly(k, l);
+
+print(m);
+print(l);

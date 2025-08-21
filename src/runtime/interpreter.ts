@@ -17,6 +17,7 @@ import {
     WhileExpression,
     IfStatement,
     ArrayLiteral,
+    ReturnStatement,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -25,6 +26,7 @@ import Environment from "./environment.ts";
 import {
     EvaluateFunctionDeclaration,
     EvaluateProgram,
+    EvaluateReturnStatement,
     EvaluateVariableDeclaration,
 } from "../frontend/eval/statements.ts";
 
@@ -93,6 +95,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
                 astNode as FunctionDeclaration,
                 env,
             );
+
+        case "ReturnStatement":
+            return EvaluateReturnStatement(astNode as ReturnStatement, env);
 
         case "IfStatement":
             return EvaluateIfStatement(astNode as IfStatement, env);

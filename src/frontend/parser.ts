@@ -18,6 +18,7 @@ import {
     ForExpression,
     WhileExpression,
     ArrayLiteral,
+    ReturnStatement,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { FunctionError, ParseError } from "./errors.ts";
@@ -129,6 +130,18 @@ export default class Parser {
                 const expr = this.ParseExpression();
                 this.ExpectSemicolon("expression");
                 return expr;
+            }
+            case TokenType.Return: {
+                this.Next();
+                const value =
+                    this.At().type !== TokenType.Semicolon
+                        ? this.ParseExpression()
+                        : undefined;
+                this.ExpectSemicolon("return statement");
+                return {
+                    kind: "ReturnStatement",
+                    value,
+                } as ReturnStatement;
             }
             default: {
                 const expr = this.ParseExpression();

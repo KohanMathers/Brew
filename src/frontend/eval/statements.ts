@@ -1,7 +1,17 @@
-import { FunctionDeclaration, Program, VariableDeclaration } from "../ast.ts";
+import {
+    FunctionDeclaration,
+    Program,
+    ReturnStatement,
+    VariableDeclaration,
+} from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import { Evaluate } from "../../runtime/interpreter.ts";
-import { FunctionValue, MakeNull, RuntimeValue } from "../../runtime/values.ts";
+import {
+    FunctionValue,
+    MakeNull,
+    MakeReturn,
+    RuntimeValue,
+} from "../../runtime/values.ts";
 
 /**
  * Evaluates a program
@@ -62,4 +72,16 @@ export function EvaluateFunctionDeclaration(
     } as FunctionValue;
 
     return env.declareVariable(declaration.name, func, true);
+}
+
+/**
+ * Evaluates a return statement
+ * Returns the value of the return statement, or null if no value is provided.
+ */
+export function EvaluateReturnStatement(
+    statement: ReturnStatement,
+    env: Environment,
+): RuntimeValue {
+    const value = statement.value ? Evaluate(statement.value, env) : MakeNull();
+    return MakeReturn(value);
 }

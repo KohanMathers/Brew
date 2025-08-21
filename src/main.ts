@@ -95,7 +95,7 @@ async function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    console.log("\nBrew Repl v2.0");
+    console.log("\nBrew Repl v2.2.0");
     console.log("Type 'exit' to quit");
 
     if (isDeno()) {

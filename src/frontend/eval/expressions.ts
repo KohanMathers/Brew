@@ -12,6 +12,7 @@ import {
     MakeBool,
     ArrayValue,
     MakeArray,
+    ReturnValue,
 } from "../../runtime/values.ts";
 import {
     AssignmentExpression,
@@ -344,10 +345,16 @@ export function EvaluateIfStatement(
         // Execute the 'then' branch
         for (const stmt of ifStmt.thenBranch) {
             result = Evaluate(stmt, env);
+            if (result.type === "return") {
+                return result;
+            }
         }
     } else if (ifStmt.elseBranch) {
         // Execute the 'else' branch if provided
         for (const stmt of ifStmt.elseBranch) {
+            if (result.type === "return") {
+                return result;
+            }
             result = Evaluate(stmt, env);
         }
     }
@@ -394,6 +401,9 @@ export function EvaluateCallExpression(
 
         for (const stmt of fn.body) {
             result = Evaluate(stmt, scope);
+            if (result.type === "return") {
+                return (result as ReturnValue).value;
+            }
         }
 
         return result;
@@ -469,6 +479,9 @@ export function EvaluateForExpression(
     for (let i = 0; i < iterations; i++) {
         for (const stmt of forExpr.body) {
             result = Evaluate(stmt, env);
+            if (result.type === "return") {
+                return result;
+            }
         }
     }
 
