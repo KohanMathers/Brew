@@ -27,12 +27,10 @@ export class JavaCompiler {
     public compile(program: Program, className: string = "Program"): string {
         const context = new CompilationContext(className);
 
-        // Process all statements
         for (const stmt of program.body) {
             this.compileStatement(stmt, context);
         }
 
-        // Generate the main Java class
         return this.generateMainClass(context);
     }
 
@@ -62,9 +60,7 @@ export class JavaCompiler {
             case "WhileExpression":
             case "BinaryExpression": {
                 const javaCode = this.statementToJava(stmt, context);
-                if (javaCode.trim()) {
-                    context.addMainStatement(javaCode);
-                }
+                if (javaCode.trim()) context.addMainStatement(javaCode);
                 break;
             }
             default:
@@ -73,18 +69,20 @@ export class JavaCompiler {
     }
 
     /**
-     * Compile function declarations
+     * Compile function declarations with unreachable statement detection
      */
     private compileFunctionDeclaration(
         func: FunctionDeclaration,
         context: CompilationContext,
     ): void {
-        // Set context to indicate we're inside a method
         context.setInMethod(true);
+        context.registerFunction(func.name, func.parameters);
 
         const methodBody = func.body
             .map((stmt, index) => {
-                // If it's the last statement and it's an expression, make it a return statement (would have been easier to make 'return' a brew keyword, but oh well)
+                if (index > 0 && this.isUnreachable(func.body, index))
+                    return null;
+
                 if (index === func.body.length - 1 && this.isExpression(stmt)) {
                     return (
                         "        return " +
@@ -92,8 +90,20 @@ export class JavaCompiler {
                         ";"
                     );
                 }
-                return "        " + this.statementToJava(stmt, context);
+
+                if (stmt.kind === "ReturnStatement") {
+                    const returnExpr = (stmt as any).expression;
+                    return returnExpr
+                        ? "        return " +
+                              this.expressionToJava(returnExpr, context) +
+                              ";"
+                        : "        return null;";
+                }
+
+                const stmtCode = this.statementToJava(stmt, context);
+                return stmtCode ? "        " + stmtCode : null;
             })
+            .filter(Boolean)
             .join("\n");
 
         const parameters = func.parameters
@@ -104,7 +114,7 @@ export class JavaCompiler {
             RETURN_TYPE: "Object",
             METHOD_NAME: func.name,
             PARAMETERS: parameters,
-            METHOD_BODY: methodBody,
+            METHOD_BODY: methodBody || "        return null;",
         });
 
         context.addMethod(methodCode);
@@ -112,7 +122,20 @@ export class JavaCompiler {
     }
 
     /**
-     * Check if a statement is an expression that can be returned
+     * Detect if a statement is unreachable (after a return)
+     */
+    private isUnreachable(body: Stmt[], index: number): boolean {
+        for (let i = 0; i < index; i++) {
+            if (body[i].kind === "ReturnStatement") return true;
+            // Also check if previous statement is an expression that would be a return
+            if (i === body.length - 2 && this.isExpression(body[i]))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if a statement is an expression
      */
     private isExpression(stmt: Stmt): boolean {
         return (
@@ -151,6 +174,7 @@ export class JavaCompiler {
             context.addMainStatement(varCode);
         } else {
             context.addClassVariable("    private " + varCode);
+            context.registerVariable(varDecl.identifier, javaType);
         }
     }
 
@@ -163,37 +187,33 @@ export class JavaCompiler {
     ): void {
         let condition: string;
 
-        // Check if the condition is a comparison expression that returns boolean
         if (ifStmt.condition.kind === "ComparisonExpression") {
             condition = this.expressionToJava(ifStmt.condition, context);
         } else {
-            // For other expressions, convert to boolean
             const expr = this.expressionToJava(ifStmt.condition, context);
             condition = this.convertToBoolean(expr);
         }
 
         const thenBody = ifStmt.thenBranch
-            .map((stmt) => "            " + this.statementToJava(stmt, context))
+            .map((stmt) => {
+                const stmtCode = this.statementToJava(stmt, context);
+                return stmtCode ? "            " + stmtCode : null;
+            })
+            .filter(Boolean)
             .join("\n");
 
         let ifCode: string;
         if (ifStmt.elseBranch && ifStmt.elseBranch.length > 0) {
             const elseBody = ifStmt.elseBranch
-                .map(
-                    (stmt) =>
-                        "            " + this.statementToJava(stmt, context),
-                )
+                .map((stmt) => {
+                    const stmtCode = this.statementToJava(stmt, context);
+                    return stmtCode ? "            " + stmtCode : null;
+                })
+                .filter(Boolean)
                 .join("\n");
-
-            ifCode = `if (${condition}) {
-    ${thenBody}
-            } else {
-    ${elseBody}
-            }`;
+            ifCode = `if (${condition}) {\n${thenBody}\n        } else {\n${elseBody}\n        }`;
         } else {
-            ifCode = `if (${condition}) {
-    ${thenBody}
-            }`;
+            ifCode = `if (${condition}) {\n${thenBody}\n        }`;
         }
 
         context.addMainStatement(ifCode);
@@ -209,25 +229,20 @@ export class JavaCompiler {
         if (!expr) return "null";
 
         switch (expr.kind) {
-            case "NumericLiteral": {
-                const numExpr = expr as NumericLiteral;
-                return numExpr.value.toString();
-            }
-            case "StringLiteral": {
-                const strExpr = expr as StringLiteral;
-                return `"${strExpr.value.replace(/"/g, '\"')}"`;
-            }
+            case "NumericLiteral":
+                return (expr as NumericLiteral).value.toString();
+            case "StringLiteral":
+                return `"${(expr as StringLiteral).value.replace(/"/g, '\\"')}"`;
             case "Identifier": {
                 const idExpr = expr as Identifier;
-                if (idExpr.symbol === "brewver") {
-                    return '"Brew v2.0"';
-                }
+                if (idExpr.symbol === "brewver") return '"Brew v2.0"';
                 return idExpr.symbol;
             }
-            case "BinaryExpression": {
-                const binExpr = expr as BinaryExpression;
-                return this.handleBinaryExpression(binExpr, context);
-            }
+            case "BinaryExpression":
+                return this.handleBinaryExpression(
+                    expr as BinaryExpression,
+                    context,
+                );
             case "ComparisonExpression": {
                 const compExpr = expr as ComparisonExpression;
                 const leftComp = this.expressionToJava(compExpr.left, context);
@@ -244,13 +259,10 @@ export class JavaCompiler {
             case "CallExpression": {
                 const callExpr = expr as CallExpression;
                 const args = callExpr.args
-                    .map((arg: Expression) =>
-                        this.expressionToJava(arg, context),
-                    )
+                    .map((arg) => this.expressionToJava(arg, context))
                     .join(", ");
                 const callerExpr = callExpr.caller as Identifier;
 
-                // Handle built-in functions
                 if (callerExpr.kind === "Identifier") {
                     switch (callerExpr.symbol) {
                         case "int":
@@ -268,9 +280,9 @@ export class JavaCompiler {
                         case "ceil":
                             return `Math.ceil(((Number)${args}).doubleValue())`;
                         case "print":
-                            // This should be handled in statementToJava, but just in case
                             return `System.out.println(${args})`;
                         default:
+                            // User-defined function call
                             return `${callerExpr.symbol}(${args})`;
                     }
                 }
@@ -280,22 +292,19 @@ export class JavaCompiler {
             }
             case "ObjectLiteral": {
                 const objExpr = expr as ObjectLiteral;
-                // Let's be simple people, a HashMap will do
                 const props = objExpr.properties
                     .map(
                         (prop: Property) =>
-                            `put(\"${prop.key}\", ${prop.value ? this.expressionToJava(prop.value, context) : "null"})`,
+                            `put("${prop.key}", ${prop.value ? this.expressionToJava(prop.value, context) : "null"})`,
                     )
                     .join("; ");
                 return `new HashMap<String, Object>() {{ ${props}; }}`;
             }
             case "ArrayLiteral": {
                 const arrExpr = expr as ArrayLiteral;
-                const elements: string[] = arrExpr.elements.map(
-                    (el: Expression) => this.expressionToJava(el, context),
+                const elements: string[] = arrExpr.elements.map((el) =>
+                    this.expressionToJava(el, context),
                 );
-
-                // Don't create a raw array printing it messes up, use an ArrayList
                 return `new java.util.ArrayList<Object>() {{ ${elements.map((el) => `add(${el});`).join(" ")} }}`;
             }
             default:
@@ -304,42 +313,183 @@ export class JavaCompiler {
     }
 
     /**
-     * Handle binary expressions with proper type casting
+     * Handle binary expressions with proper string concatenation detection
      */
     private handleBinaryExpression(
         binExpr: BinaryExpression,
         context: CompilationContext,
     ): string {
-        const left = this.expressionToJava(binExpr.left, context);
-        const right = this.expressionToJava(binExpr.right, context);
+        const leftCode = this.expressionToJava(binExpr.left, context);
+        const rightCode = this.expressionToJava(binExpr.right, context);
 
-        // Check if the operator is "+" and determine the types of operands
         if (binExpr.operator === "+") {
-            // If both operands are numeric, perform numeric addition
-            if (this.isNumeric(left) && this.isNumeric(right)) {
-                return `(${left} + ${right})`;
-            } else if (this.isNumeric(left) || this.isNumeric(right)) {
-                return `(${left} + ${right})`;
+            // Check if this is string concatenation
+            if (this.isStringConcatenation(binExpr, context)) {
+                return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
-
-            // Otherwise, perform string concatenation
-            return `(String.valueOf(${left}) + String.valueOf(${right}))`;
+            // Pure numeric addition
+            else if (
+                this.isNumericExpression(binExpr.left, context) &&
+                this.isNumericExpression(binExpr.right, context)
+            ) {
+                if (
+                    this.isIntegerExpression(binExpr.left, context) &&
+                    this.isIntegerExpression(binExpr.right, context)
+                ) {
+                    return `(${leftCode} + ${rightCode})`;
+                } else {
+                    return `(((Number)${leftCode}).doubleValue() + ((Number)${rightCode}).doubleValue())`;
+                }
+            }
+            // Mixed or unknown types - default to string concatenation
+            else {
+                return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
+            }
         }
 
-        // For other operators, cast to double for numeric operations
-        switch (binExpr.operator) {
-            case "-":
-            case "*":
-            case "/":
-            case "%":
-                return `(((Number)${left}).doubleValue() ${binExpr.operator} ((Number)${right}).doubleValue())`;
+        // Numeric operations for non-plus operators
+        if (["-", "*", "/", "%"].includes(binExpr.operator)) {
+            if (
+                this.isIntegerExpression(binExpr.left, context) &&
+                this.isIntegerExpression(binExpr.right, context) &&
+                binExpr.operator !== "/"
+            ) {
+                return `(${leftCode} ${binExpr.operator} ${rightCode})`;
+            } else {
+                return `(((Number)${leftCode}).doubleValue() ${binExpr.operator} ((Number)${rightCode}).doubleValue())`;
+            }
+        }
+
+        // Fallback for anything else
+        return `(${leftCode} ${binExpr.operator} ${rightCode})`;
+    }
+
+    /**
+     * Determine if a binary expression should be treated as string concatenation
+     */
+    private isStringConcatenation(
+        binExpr: BinaryExpression,
+        context: CompilationContext,
+    ): boolean {
+        if (binExpr.operator !== "+") return false;
+
+        // If either operand is explicitly a string, treat as concatenation
+        if (
+            this.isStringExpression(binExpr.left, context) ||
+            this.isStringExpression(binExpr.right, context)
+        ) {
+            return true;
+        }
+
+        // If left side is a concatenation chain, continue as string
+        if (
+            binExpr.left.kind === "BinaryExpression" &&
+            (binExpr.left as BinaryExpression).operator === "+"
+        ) {
+            return this.isStringConcatenation(
+                binExpr.left as BinaryExpression,
+                context,
+            );
+        }
+
+        return false;
+    }
+
+    private isStringExpression(
+        expr: Expression,
+        context: CompilationContext,
+    ): boolean {
+        switch (expr.kind) {
+            case "StringLiteral":
+                return true;
+            case "Identifier":
+                return (
+                    context.getVariableType((expr as Identifier).symbol) ===
+                    "String"
+                );
+            case "CallExpression":
+                const call = expr as CallExpression;
+                return (
+                    call.caller.kind === "Identifier" &&
+                    (call.caller as Identifier).symbol === "str"
+                );
+            case "BinaryExpression":
+                const binExpr = expr as BinaryExpression;
+                if (binExpr.operator === "+") {
+                    return this.isStringConcatenation(binExpr, context);
+                }
+                return false;
             default:
-                return `(${left} ${binExpr.operator} ${right})`;
+                return false;
+        }
+    }
+
+    private isNumericExpression(
+        expr: Expression,
+        context: CompilationContext,
+    ): boolean {
+        switch (expr.kind) {
+            case "NumericLiteral":
+                return true;
+            // deno-lint-ignore no-case-declarations
+            case "Identifier":
+                const type = context.getVariableType(
+                    (expr as Identifier).symbol,
+                );
+                return type === "int" || type === "double";
+            // deno-lint-ignore no-case-declarations
+            case "CallExpression":
+                const call = expr as CallExpression;
+                if (call.caller.kind === "Identifier") {
+                    const funcName = (call.caller as Identifier).symbol;
+                    return [
+                        "int",
+                        "float",
+                        "abs",
+                        "round",
+                        "floor",
+                        "ceil",
+                    ].includes(funcName);
+                }
+                return false;
+            // deno-lint-ignore no-case-declarations
+            case "BinaryExpression":
+                const binExpr = expr as BinaryExpression;
+                return (
+                    ["-", "*", "/", "%"].includes(binExpr.operator) ||
+                    (binExpr.operator === "+" &&
+                        !this.isStringConcatenation(binExpr, context))
+                );
+            default:
+                return false;
+        }
+    }
+
+    private isIntegerExpression(
+        expr: Expression,
+        context: CompilationContext,
+    ): boolean {
+        switch (expr.kind) {
+            case "NumericLiteral":
+                return Number.isInteger((expr as NumericLiteral).value);
+            case "Identifier":
+                return (
+                    context.getVariableType((expr as Identifier).symbol) ===
+                    "int"
+                );
+            case "CallExpression":
+                const call = expr as CallExpression;
+                return (
+                    call.caller.kind === "Identifier" &&
+                    (call.caller as Identifier).symbol === "int"
+                );
+            default:
+                return false;
         }
     }
 
     /**
-     * Handle comparison operations with proper type casting
+     * Handle comparison operations
      */
     private handleComparison(
         left: string,
@@ -348,15 +498,13 @@ export class JavaCompiler {
     ): string {
         switch (operator) {
             case "==":
-            case "!=": {
-                const equals = `Objects.equals(${left}, ${right})`;
-                return operator === "==" ? equals : `!${equals}`;
-            }
+                return `Objects.equals(${left}, ${right})`;
+            case "!=":
+                return `!Objects.equals(${left}, ${right})`;
             case ">":
             case "<":
             case ">=":
             case "<=":
-                // For numeric comparisons, cast to double
                 return `(((Number)${left}).doubleValue() ${operator} ((Number)${right}).doubleValue())`;
             default:
                 return `(${left} ${operator} ${right})`;
@@ -387,10 +535,9 @@ export class JavaCompiler {
                         .map((arg: Expression) =>
                             this.expressionToJava(arg, context),
                         )
-                        .join(' + " " + ');
+                        .join(", ");
                     return this.fillTemplate("print", { ARGS: args });
                 }
-
                 return `${this.expressionToJava(stmt as Expression, context)};`;
             }
             case "ForExpression": {
@@ -400,10 +547,11 @@ export class JavaCompiler {
                     context,
                 );
                 const forBody = forExpr.body
-                    .map(
-                        (s: Stmt) =>
-                            "            " + this.statementToJava(s, context),
-                    )
+                    .map((s: Stmt) => {
+                        const stmtCode = this.statementToJava(s, context);
+                        return stmtCode ? "            " + stmtCode : null;
+                    })
+                    .filter(Boolean)
                     .join("\n");
                 return this.fillTemplate("for_loop", {
                     ITERATIONS: iterations,
@@ -412,15 +560,26 @@ export class JavaCompiler {
             }
             case "WhileExpression": {
                 const whileExpr = stmt as WhileExpression;
-                const condition = this.expressionToJava(
-                    whileExpr.condition,
-                    context,
-                );
+                let condition: string;
+                if (whileExpr.condition.kind === "ComparisonExpression") {
+                    condition = this.expressionToJava(
+                        whileExpr.condition,
+                        context,
+                    );
+                } else {
+                    const expr = this.expressionToJava(
+                        whileExpr.condition,
+                        context,
+                    );
+                    condition = this.convertToBoolean(expr);
+                }
+
                 const whileBody = whileExpr.body
-                    .map(
-                        (s: Stmt) =>
-                            "            " + this.statementToJava(s, context),
-                    )
+                    .map((s: Stmt) => {
+                        const stmtCode = this.statementToJava(s, context);
+                        return stmtCode ? "            " + stmtCode : null;
+                    })
+                    .filter(Boolean)
                     .join("\n");
                 return this.fillTemplate("while_loop", {
                     CONDITION: condition,
@@ -428,38 +587,28 @@ export class JavaCompiler {
                 });
             }
             case "BinaryExpression":
-                // Handle standalone binary expressions (like a + 5;)
                 return `${this.expressionToJava(stmt as Expression, context)};`;
-
             case "VariableDeclaration":
                 this.compileVariableDeclaration(
                     stmt as VariableDeclaration,
                     context,
                 );
-                return ""; // Already handled in compileVariableDeclaration so just return a blank
-
+                return "";
+            case "ReturnStatement": {
+                const returnExpr = (stmt as any).expression;
+                return returnExpr
+                    ? `return ${this.expressionToJava(returnExpr, context)};`
+                    : "return null;";
+            }
             default:
                 return `// Unsupported statement: ${stmt.kind}`;
         }
     }
 
-    /**
-     * Helper method to check if a value is numeric
-     */
-    private isNumeric(value: string): boolean {
-        return /^-?\d+(\.\d+)?$/.test(value);
-    }
-
-    /**
-     * Convert expression to boolean for conditions (for non-comparison expressions)
-     */
     private convertToBoolean(expr: string): string {
         return `(${expr} != null && !String.valueOf(${expr}).equals("null") && !String.valueOf(${expr}).equals("") && !String.valueOf(${expr}).equals("0") && !String.valueOf(${expr}).equals("false"))`;
     }
 
-    /**
-     * Generate the final Java class
-     */
     private generateMainClass(context: CompilationContext): string {
         return this.fillTemplate("main_class", {
             CLASS_NAME: context.className,
@@ -471,19 +620,13 @@ export class JavaCompiler {
         });
     }
 
-    /**
-     * Fill a template with provided values
-     */
     private fillTemplate(
         templateName: TemplateKey,
         values: Record<string, string>,
     ): string {
         let template = JAVA_TEMPLATES[templateName];
-        if (!template) {
-            throw new Error(`Template '${templateName}' not found`);
-        }
+        if (!template) throw new Error(`Template '${templateName}' not found`);
 
-        // Replace all placeholders
         for (const [key, value] of Object.entries(values)) {
             const placeholder = `{{${key}}}`;
             template = template.replace(new RegExp(placeholder, "g"), value);
@@ -492,17 +635,14 @@ export class JavaCompiler {
         return template;
     }
 
-    /**
-     * Determine Java type from Brew expression
-     */
     private getJavaType(expr: Expression): string {
         if (!expr) return "Object";
 
         switch (expr.kind) {
-            case "NumericLiteral": {
-                const numExpr = expr as NumericLiteral;
-                return Number.isInteger(numExpr.value) ? "int" : "double";
-            }
+            case "NumericLiteral":
+                return Number.isInteger((expr as NumericLiteral).value)
+                    ? "int"
+                    : "double";
             case "StringLiteral":
                 return "String";
             case "ObjectLiteral":
@@ -532,15 +672,14 @@ export class JavaCompiler {
     }
 }
 
-/**
- * Context class to track compilation state
- */
 class CompilationContext {
     public className: string;
     public classVariables: string[] = [];
     public mainStatements: string[] = [];
     public methods: string[] = [];
     private inMethod: boolean = false;
+    private variableTypes: Map<string, string> = new Map();
+    private functions: Map<string, string[]> = new Map();
 
     constructor(className: string) {
         this.className = className;
@@ -564,5 +703,21 @@ class CompilationContext {
 
     setInMethod(inMethod: boolean): void {
         this.inMethod = inMethod;
+    }
+
+    registerVariable(name: string, type: string): void {
+        this.variableTypes.set(name, type);
+    }
+
+    getVariableType(name: string): string {
+        return this.variableTypes.get(name) || "Object";
+    }
+
+    registerFunction(name: string, parameters: string[]): void {
+        this.functions.set(name, parameters);
+    }
+
+    isFunction(name: string): boolean {
+        return this.functions.has(name);
     }
 }
