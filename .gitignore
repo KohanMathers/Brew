@@ -6,3 +6,4 @@ package.json
 .prettierrc
 dist/
 update-version.js
+jvm/target
