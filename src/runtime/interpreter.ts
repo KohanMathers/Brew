@@ -18,6 +18,7 @@ import {
     IfStatement,
     ArrayLiteral,
     ReturnStatement,
+    MemberExpression,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -41,6 +42,7 @@ import {
     EvaluateWhileExpression,
     EvaluateIfStatement,
     EvaluateArrayExpression,
+    EvaluateMemberExpression,
 } from "../frontend/eval/expressions.ts";
 
 /**
@@ -110,6 +112,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
 
         case "ArrayLiteral":
             return EvaluateArrayExpression(astNode as ArrayLiteral, env);
+
+        case "MemberExpression":
+            return EvaluateMemberExpression(astNode as MemberExpression, env);
 
         default:
             throw new InterpretError(

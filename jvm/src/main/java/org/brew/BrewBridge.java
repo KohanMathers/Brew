@@ -17,20 +17,19 @@ public class BrewBridge {
                     .option("engine.WarnInterpreterOnly", "false")
                     .build();
 
-            // Read from classpath resource instead of filesystem
-            InputStream is = BrewBridge.class.getClassLoader().getResourceAsStream("brew-engine.js");
-            if (is == null) {
-                throw new RuntimeException("Could not find brew-engine.js in classpath");
+            String engineCode;
+            try ( // Read from classpath resource instead of filesystem
+                    InputStream is = BrewBridge.class.getClassLoader().getResourceAsStream("brew-engine.js")) {
+                if (is == null) {
+                    throw new RuntimeException("Could not find brew-engine.js in classpath");
+                }   engineCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
-            
-            String engineCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            is.close();
             
             context.eval("js", engineCode);
             
         } catch (IOException e) {
             throw new RuntimeException("Failed to load brew-engine.js", e);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new RuntimeException("Failed to initialize BrewBridge", e);
         }
     }

@@ -1,4 +1,4 @@
-# Brew v2.2.1
+# Brew v2.2.2
 
 **Important: Brew now includes an experimental compiler that translates `.brew` scripts into Java code.**
 
@@ -112,11 +112,11 @@ deno run --allow-read src/main.ts
 You'll enter an interactive prompt:
 
 ```
-Brew Repl v2.2.1
+Brew Repl v2.2.2
 > print("hello");
 hello
-> brewver;
-Brew v2.2.1
+> print(brewver);
+Brew v2.2.2
 ```
 
 Type `exit` to quit the REPL.

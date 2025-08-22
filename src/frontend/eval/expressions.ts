@@ -25,6 +25,7 @@ import {
     ForExpression,
     WhileExpression,
     ArrayLiteral,
+    MemberExpression,
 } from "../ast.ts";
 import Environment from "../../runtime/environment.ts";
 import {
@@ -32,6 +33,7 @@ import {
     CalculationError,
     ComparisonError,
     FunctionError,
+    InterpretError,
 } from "../errors.ts";
 
 /**
@@ -423,15 +425,81 @@ export function EvaluateAssignment(
     node: AssignmentExpression,
     env: Environment,
 ): RuntimeValue {
-    // Ensure the assignee is an identifier
-    if (node.assignee.kind != "Identifier") {
+    if (node.assignee.kind === "Identifier") {
+        const varname = (node.assignee as Identifier).symbol;
+        return env.assignVariable(varname, Evaluate(node.value, env));
+    }
+
+    if (node.assignee.kind === "MemberExpression") {
+        const memberExpr = node.assignee as MemberExpression;
+        const object = Evaluate(memberExpr.object, env);
+        const newValue = Evaluate(node.value, env);
+
+        if (object.type === "array" && memberExpr.computed) {
+            const arrayValue = object as ArrayValue;
+            const indexValue = Evaluate(memberExpr.property, env);
+
+            if (indexValue.type !== "number") {
+                throw new AssignmentError(
+                    `Array index must be a number, got: ${indexValue.type}`,
+                );
+            }
+
+            const index = (indexValue as NumberValue).value;
+
+            if (index < 0 || index !== Math.floor(index)) {
+                throw new AssignmentError(`Invalid array index: ${index}`);
+            }
+
+            while (arrayValue.elements.length <= index) {
+                arrayValue.elements.push(MakeNull());
+            }
+
+            arrayValue.elements[index] = newValue;
+            return newValue;
+        }
+
+        // Handle object property assignments
+        if (object.type === "object") {
+            const objValue = object as ObjectValue;
+
+            let propertyKey: string;
+
+            if (memberExpr.computed) {
+                // For obj[key] syntax
+                const keyValue = Evaluate(memberExpr.property, env);
+                if (keyValue.type === "string") {
+                    propertyKey = (keyValue as StringValue).value;
+                } else if (keyValue.type === "number") {
+                    propertyKey = (keyValue as NumberValue).value.toString();
+                } else {
+                    throw new AssignmentError(
+                        `Property key must be string or number, got: ${keyValue.type}`,
+                    );
+                }
+            } else {
+                // For obj.key syntax
+                if (memberExpr.property.kind !== "Identifier") {
+                    throw new AssignmentError(
+                        "Non-computed property access requires identifier",
+                    );
+                }
+                propertyKey = (memberExpr.property as Identifier).symbol;
+            }
+
+            objValue.properties.set(propertyKey, newValue);
+            return newValue;
+        }
+
+        // If we get here, it's an unsupported assignment target type
         throw new AssignmentError(
-            `Invalid assignment target: ${JSON.stringify(node.assignee)}`,
+            `Cannot assign to ${object.type} using member expression`,
         );
     }
 
-    const varname = (node.assignee as Identifier).symbol;
-    return env.assignVariable(varname, Evaluate(node.value, env));
+    throw new AssignmentError(
+        `Invalid assignment target: ${JSON.stringify(node.assignee)}`,
+    );
 }
 
 /**
@@ -529,4 +597,79 @@ export function EvaluateArrayExpression(
 ): ArrayValue {
     const elements = arrayExpr.elements.map((elem) => Evaluate(elem, env));
     return MakeArray(elements);
+}
+
+/**
+ * Evaluates a member expression for reading values
+ * Handles both obj.property and obj[key] syntax for objects and arrays
+ */
+export function EvaluateMemberExpression(
+    expr: MemberExpression,
+    env: Environment,
+): RuntimeValue {
+    const object = Evaluate(expr.object, env);
+
+    if (object.type === "array") {
+        const arrayValue = object as ArrayValue;
+
+        if (!expr.computed) {
+            throw new InterpretError(
+                "Cannot use dot notation on arrays. Use bracket notation instead.",
+            );
+        }
+
+        const indexValue = Evaluate(expr.property, env);
+
+        if (indexValue.type !== "number") {
+            throw new InterpretError(
+                `Array index must be a number, got: ${indexValue.type}`,
+            );
+        }
+
+        const index = (indexValue as NumberValue).value;
+
+        if (index < 0 || index !== Math.floor(index)) {
+            throw new InterpretError(`Invalid array index: ${index}`);
+        }
+
+        // Return null for out-of-bounds access
+        if (index >= arrayValue.elements.length) {
+            return MakeNull();
+        }
+
+        return arrayValue.elements[index];
+    }
+
+    if (object.type === "object") {
+        const objValue = object as ObjectValue;
+        let propertyKey: string;
+
+        if (expr.computed) {
+            // For obj[key] syntax
+            const keyValue = Evaluate(expr.property, env);
+            if (keyValue.type === "string") {
+                propertyKey = (keyValue as StringValue).value;
+            } else if (keyValue.type === "number") {
+                propertyKey = (keyValue as NumberValue).value.toString();
+            } else {
+                throw new InterpretError(
+                    `Property key must be string or number, got: ${keyValue.type}`,
+                );
+            }
+        } else {
+            // For obj.key syntax
+            if (expr.property.kind !== "Identifier") {
+                throw new InterpretError(
+                    "Non-computed property access requires identifier",
+                );
+            }
+            propertyKey = (expr.property as Identifier).symbol;
+        }
+
+        // Get the property value, return null if it doesn't exist
+        const value = objValue.properties.get(propertyKey);
+        return value !== undefined ? value : MakeNull();
+    }
+
+    throw new InterpretError(`Cannot access property of ${object.type}`);
 }
