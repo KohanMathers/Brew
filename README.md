@@ -765,4 +765,5 @@ Join my Discord! [https://discord.gg/FZuVXszuuM](https://discord.gg/FZuVXszuuM)
 
 * Brew is a fun personal language implementation project
 * Special thanks to all modern language implementation resources that inspired this work
+* tylerlaceby on YouTube for his [custom language tutorial](https://www.youtube.com/watch?v=8VB5TY1sIRo&ab_channel=tylerlaceby)
 * Built with Deno and TypeScript for modern JavaScript runtime capabilities
