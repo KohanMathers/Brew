@@ -6,27 +6,38 @@ import java.nio.charset.StandardCharsets;
 
 import org.graalvm.polyglot.Context;
 
+/**
+ * The {@code BrewBridge} class provides a Java interface to the Brew language runtime.
+ * It uses GraalVM's JavaScript engine to load and execute Brew engine code.
+ * <p>
+ * This class offers methods to compile Brew code to Java bytecode, interpret code directly,
+ * and start an interactive REPL session.
+ * </p>
+ */
 public class BrewBridge {
 
+    /** The GraalVM polyglot context used to evaluate Brew code. */
     private static final Context context;
 
     static {
         try {
+            // Initialize the polyglot context with JavaScript and regex support
             context = Context.newBuilder("js", "regex")
                     .allowAllAccess(true)
                     .option("engine.WarnInterpreterOnly", "false")
                     .build();
 
+            // Load the Brew engine code from the classpath
             String engineCode;
-            try ( // Read from classpath resource instead of filesystem
-                    InputStream is = BrewBridge.class.getClassLoader().getResourceAsStream("brew-engine.js")) {
+            try (InputStream is = BrewBridge.class.getClassLoader().getResourceAsStream("brew-engine.js")) {
                 if (is == null) {
                     throw new RuntimeException("Could not find brew-engine.js in classpath");
-                }   engineCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+                engineCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
-            
+
             context.eval("js", engineCode);
-            
+
         } catch (IOException e) {
             throw new RuntimeException("Failed to load brew-engine.js", e);
         } catch (RuntimeException e) {
@@ -34,6 +45,14 @@ public class BrewBridge {
         }
     }
 
+    /**
+     * Compiles Brew code into Java bytecode.
+     *
+     * @param code      The Brew source code to compile.
+     * @param className The name of the generated Java class.
+     * @return The compiled Java bytecode as a String.
+     * @throws RuntimeException if the compilation fails.
+     */
     public static String compile(String code, String className) {
         try {
             return context.eval("js", "BrewEngine.compile(" + escapeJSString(code) + ", " + escapeJSString(className) + ");").asString();
@@ -42,6 +61,13 @@ public class BrewBridge {
         }
     }
 
+    /**
+     * Interprets Brew code immediately without compilation.
+     *
+     * @param code The Brew code to interpret.
+     * @return The result of code execution as a String.
+     * @throws RuntimeException if the interpretation fails.
+     */
     public static String interpret(String code) {
         try {
             return context.eval("js", "BrewEngine.interpret(" + escapeJSString(code) + ");").asString();
@@ -50,6 +76,11 @@ public class BrewBridge {
         }
     }
 
+    /**
+     * Starts an interactive REPL session for Brew.
+     *
+     * @throws RuntimeException if the REPL fails to start.
+     */
     public static void repl() {
         try {
             context.eval("js", "BrewEngine.repl();");
@@ -59,7 +90,10 @@ public class BrewBridge {
     }
 
     /**
-     * Properly escape strings for JavaScript evaluation
+     * Properly escapes Java strings for safe JavaScript evaluation.
+     *
+     * @param str The string to escape.
+     * @return A JavaScript-safe string literal.
      */
     private static String escapeJSString(String str) {
         if (str == null) return "null";
@@ -71,7 +105,8 @@ public class BrewBridge {
     }
 
     /**
-     * Clean up resources when done
+     * Cleans up resources associated with the polyglot context.
+     * Should be called when the runtime is no longer needed.
      */
     public static void cleanup() {
         if (context != null) {
