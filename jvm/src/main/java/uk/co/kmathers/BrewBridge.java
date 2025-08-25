@@ -1,4 +1,4 @@
-package org.brew;
+package uk.co.kmathers;
 
 import java.io.IOException;
 import java.io.InputStream;
