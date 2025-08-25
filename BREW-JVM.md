@@ -1,6 +1,6 @@
 # Brew JVM v1.0.0
 
-**Brew JVM** is the Java runtime bridge for the [Brew programming language](https://github.com/your-repo).
+**Brew JVM** is the Java runtime bridge for the [Brew programming language](https://github.com/KohanMathers/Brew).
 It embeds the Brew engine (written in TypeScript/JavaScript) into the JVM using [GraalVM](https://www.graalvm.org/) and exposes a clean Java API for interpreting, compiling, and running Brew code.
 
 Brew JVM was **designed for Bukkit/Spigot plugin scripting**, but it works equally well in any Java project where lightweight scripting or Java code generation is useful.
