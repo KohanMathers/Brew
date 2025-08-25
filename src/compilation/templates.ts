@@ -53,6 +53,50 @@ public class {{CLASS_NAME}} {
     print: `System.out.println({{ARGS}});`,
 
     array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`,
+
+    runtime_class: `
+    public class Runtime {
+        public static Object add(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a + (Integer) b;
+                }
+                return ((Number) a).doubleValue() + ((Number) b).doubleValue();
+            }
+            return String.valueOf(a) + String.valueOf(b);
+        }
+
+        public static Object sub(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a - (Integer) b;
+                }
+                return ((Number) a).doubleValue() - ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot subtract strings.";
+        }
+
+        public static Object mult(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a * (Integer) b;
+                }
+                return ((Number) a).doubleValue() * ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot multiply strings.";
+        }
+
+        public static Object div(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a / (Integer) b;
+                }
+                return ((Number) a).doubleValue() / ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot divide strings.";
+        }
+    }
+`,
 } as const;
 
 export type TemplateKey = keyof typeof JAVA_TEMPLATES;

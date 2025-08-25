@@ -31,7 +31,10 @@ export class JavaCompiler {
             this.compileStatement(stmt, context);
         }
 
-        return this.generateMainClass(context);
+        return `
+${this.generateMainClass(context)}
+${this.fillTemplate("runtime_class", {})}
+`;
     }
 
     /**
@@ -93,7 +96,7 @@ export class JavaCompiler {
 
                 if (stmt.kind === "ReturnStatement") {
                     // deno-lint-ignore no-explicit-any
-                    const returnExpr = (stmt as any).expression;
+                    const returnExpr = (stmt as any).value;
                     return returnExpr
                         ? "        return " +
                               this.expressionToJava(returnExpr, context) +
@@ -320,12 +323,14 @@ export class JavaCompiler {
         binExpr: BinaryExpression,
         context: CompilationContext,
     ): string {
+        console.log(binExpr.left);
         const leftCode = this.expressionToJava(binExpr.left, context);
         const rightCode = this.expressionToJava(binExpr.right, context);
 
         if (binExpr.operator === "+") {
             // Check if this is string concatenation
             if (this.isStringConcatenation(binExpr, context)) {
+                console.log("str" + leftCode);
                 return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
             // Pure numeric addition
@@ -337,14 +342,14 @@ export class JavaCompiler {
                     this.isIntegerExpression(binExpr.left, context) &&
                     this.isIntegerExpression(binExpr.right, context)
                 ) {
-                    return `(${leftCode} + ${rightCode})`;
-                } else {
-                    return `(((Number)${leftCode}).doubleValue() + ((Number)${rightCode}).doubleValue())`;
+                    return `(int) Runtime.add(${leftCode}, ${rightCode})`;
                 }
+                return `(double) Runtime.add(${leftCode}, ${rightCode})`;
             }
-            // Mixed or unknown types - default to string concatenation
+            // Mixed or unknown types - default to runtime class
             else {
-                return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
+                console.log("else" + leftCode);
+                return `(String.valueOf(${leftCode}) + String.valueof(${rightCode}))`;
             }
         }
 
@@ -355,9 +360,23 @@ export class JavaCompiler {
                 this.isIntegerExpression(binExpr.right, context) &&
                 binExpr.operator !== "/"
             ) {
-                return `(${leftCode} ${binExpr.operator} ${rightCode})`;
+                switch (binExpr.operator) {
+                    case "-":
+                        return `(int) Runtime.sub(${leftCode}, ${rightCode})`;
+                    case "*":
+                        return `(int) Runtime.mult(${leftCode}, ${rightCode})`;
+                    case "/":
+                        return `(int) Runtime.div(${leftCode}, ${rightCode})`;
+                }
             } else {
-                return `(((Number)${leftCode}).doubleValue() ${binExpr.operator} ((Number)${rightCode}).doubleValue())`;
+                switch (binExpr.operator) {
+                    case "-":
+                        return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                    case "*":
+                        return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                    case "/":
+                        return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                }
             }
         }
 
