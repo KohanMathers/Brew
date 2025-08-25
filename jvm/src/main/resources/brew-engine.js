@@ -1142,7 +1142,7 @@
           ["undefined", (0, values_js_1.MakeNull)()],
           ["true", (0, values_js_1.MakeBool)(true)],
           ["false", (0, values_js_1.MakeBool)(false)],
-          ["brewver", (0, values_js_1.MakeString)("Brew v2.2.1")],
+          ["brewver", (0, values_js_1.MakeString)("Brew v2.3.0")],
           ["print", (0, values_js_1.MakeInternalCall)(functions_js_1.PrintFunction)],
           ["time", (0, values_js_1.MakeInternalCall)(functions_js_1.TimeFunction)],
           ["nat", (0, values_js_1.MakeInternalCall)(functions_js_1.NatFunction)],
@@ -1228,6 +1228,7 @@
       exports.EvaluateForExpression = EvaluateForExpression;
       exports.EvaluateWhileExpression = EvaluateWhileExpression;
       exports.EvaluateArrayExpression = EvaluateArrayExpression;
+      exports.EvaluateMemberExpression = EvaluateMemberExpression;
       var interpreter_js_1 = require_interpreter();
       var values_js_1 = require_values();
       var environment_js_1 = __importDefault(require_environment());
@@ -1444,11 +1445,54 @@
         throw new errors_js_1.FunctionError(`Cannot call value that is not a function: ${JSON.stringify(func)}`);
       }
       function EvaluateAssignment(node, env) {
-        if (node.assignee.kind != "Identifier") {
-          throw new errors_js_1.AssignmentError(`Invalid assignment target: ${JSON.stringify(node.assignee)}`);
+        if (node.assignee.kind === "Identifier") {
+          const varname = node.assignee.symbol;
+          return env.assignVariable(varname, (0, interpreter_js_1.Evaluate)(node.value, env));
         }
-        const varname = node.assignee.symbol;
-        return env.assignVariable(varname, (0, interpreter_js_1.Evaluate)(node.value, env));
+        if (node.assignee.kind === "MemberExpression") {
+          const memberExpr = node.assignee;
+          const object = (0, interpreter_js_1.Evaluate)(memberExpr.object, env);
+          const newValue = (0, interpreter_js_1.Evaluate)(node.value, env);
+          if (object.type === "array" && memberExpr.computed) {
+            const arrayValue = object;
+            const indexValue = (0, interpreter_js_1.Evaluate)(memberExpr.property, env);
+            if (indexValue.type !== "number") {
+              throw new errors_js_1.AssignmentError(`Array index must be a number, got: ${indexValue.type}`);
+            }
+            const index = indexValue.value;
+            if (index < 0 || index !== Math.floor(index)) {
+              throw new errors_js_1.AssignmentError(`Invalid array index: ${index}`);
+            }
+            while (arrayValue.elements.length <= index) {
+              arrayValue.elements.push((0, values_js_1.MakeNull)());
+            }
+            arrayValue.elements[index] = newValue;
+            return newValue;
+          }
+          if (object.type === "object") {
+            const objValue = object;
+            let propertyKey;
+            if (memberExpr.computed) {
+              const keyValue = (0, interpreter_js_1.Evaluate)(memberExpr.property, env);
+              if (keyValue.type === "string") {
+                propertyKey = keyValue.value;
+              } else if (keyValue.type === "number") {
+                propertyKey = keyValue.value.toString();
+              } else {
+                throw new errors_js_1.AssignmentError(`Property key must be string or number, got: ${keyValue.type}`);
+              }
+            } else {
+              if (memberExpr.property.kind !== "Identifier") {
+                throw new errors_js_1.AssignmentError("Non-computed property access requires identifier");
+              }
+              propertyKey = memberExpr.property.symbol;
+            }
+            objValue.properties.set(propertyKey, newValue);
+            return newValue;
+          }
+          throw new errors_js_1.AssignmentError(`Cannot assign to ${object.type} using member expression`);
+        }
+        throw new errors_js_1.AssignmentError(`Invalid assignment target: ${JSON.stringify(node.assignee)}`);
       }
       function valueToString(value) {
         switch (value.type) {
@@ -1506,6 +1550,49 @@
         const elements = arrayExpr.elements.map((elem) => (0, interpreter_js_1.Evaluate)(elem, env));
         return (0, values_js_1.MakeArray)(elements);
       }
+      function EvaluateMemberExpression(expr, env) {
+        const object = (0, interpreter_js_1.Evaluate)(expr.object, env);
+        if (object.type === "array") {
+          const arrayValue = object;
+          if (!expr.computed) {
+            throw new errors_js_1.InterpretError("Cannot use dot notation on arrays. Use bracket notation instead.");
+          }
+          const indexValue = (0, interpreter_js_1.Evaluate)(expr.property, env);
+          if (indexValue.type !== "number") {
+            throw new errors_js_1.InterpretError(`Array index must be a number, got: ${indexValue.type}`);
+          }
+          const index = indexValue.value;
+          if (index < 0 || index !== Math.floor(index)) {
+            throw new errors_js_1.InterpretError(`Invalid array index: ${index}`);
+          }
+          if (index >= arrayValue.elements.length) {
+            return (0, values_js_1.MakeNull)();
+          }
+          return arrayValue.elements[index];
+        }
+        if (object.type === "object") {
+          const objValue = object;
+          let propertyKey;
+          if (expr.computed) {
+            const keyValue = (0, interpreter_js_1.Evaluate)(expr.property, env);
+            if (keyValue.type === "string") {
+              propertyKey = keyValue.value;
+            } else if (keyValue.type === "number") {
+              propertyKey = keyValue.value.toString();
+            } else {
+              throw new errors_js_1.InterpretError(`Property key must be string or number, got: ${keyValue.type}`);
+            }
+          } else {
+            if (expr.property.kind !== "Identifier") {
+              throw new errors_js_1.InterpretError("Non-computed property access requires identifier");
+            }
+            propertyKey = expr.property.symbol;
+          }
+          const value = objValue.properties.get(propertyKey);
+          return value !== void 0 ? value : (0, values_js_1.MakeNull)();
+        }
+        throw new errors_js_1.InterpretError(`Cannot access property of ${object.type}`);
+      }
     }
   });
 
@@ -1558,6 +1645,8 @@
             return (0, expressions_js_1.EvaluateWhileExpression)(astNode, env);
           case "ArrayLiteral":
             return (0, expressions_js_1.EvaluateArrayExpression)(astNode, env);
+          case "MemberExpression":
+            return (0, expressions_js_1.EvaluateMemberExpression)(astNode, env);
           default:
             throw new errors_js_1.InterpretError(`The following AST node has not yet been setup for interpretation: ${astNode.kind}`);
         }
@@ -1614,7 +1703,50 @@ public class {{CLASS_NAME}} {
     `.trim(),
         ternary_if: `{{CONDITION}} ? {{TRUE_EXPR}} : {{FALSE_EXPR}}`,
         print: `System.out.println({{ARGS}});`,
-        array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`
+        array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`,
+        runtime_class: `
+    public class Runtime {
+        public static Object add(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a + (Integer) b;
+                }
+                return ((Number) a).doubleValue() + ((Number) b).doubleValue();
+            }
+            return String.valueOf(a) + String.valueOf(b);
+        }
+
+        public static Object sub(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a - (Integer) b;
+                }
+                return ((Number) a).doubleValue() - ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot subtract strings.";
+        }
+
+        public static Object mult(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a * (Integer) b;
+                }
+                return ((Number) a).doubleValue() * ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot multiply strings.";
+        }
+
+        public static Object div(Object a, Object b) {
+            if (a instanceof Number && b instanceof Number) {
+                if (a instanceof Integer && b instanceof Integer) {
+                    return (Integer) a / (Integer) b;
+                }
+                return ((Number) a).doubleValue() / ((Number) b).doubleValue();
+            }
+            return "Incompatible types: Cannot divide strings.";
+        }
+    }
+`
       };
     }
   });
@@ -1635,7 +1767,10 @@ public class {{CLASS_NAME}} {
           for (const stmt of program.body) {
             this.compileStatement(stmt, context);
           }
-          return this.generateMainClass(context);
+          return `
+${this.generateMainClass(context)}
+${this.fillTemplate("runtime_class", {})}
+`;
         }
         /**
          * Compile a single statement
@@ -1678,7 +1813,7 @@ public class {{CLASS_NAME}} {
               return "        return " + this.expressionToJava(stmt, context) + ";";
             }
             if (stmt.kind === "ReturnStatement") {
-              const returnExpr = stmt.expression;
+              const returnExpr = stmt.value;
               return returnExpr ? "        return " + this.expressionToJava(returnExpr, context) + ";" : "        return null;";
             }
             const stmtCode = this.statementToJava(stmt, context);
@@ -1837,26 +1972,42 @@ ${thenBody}
          * Handle binary expressions with proper string concatenation detection
          */
         handleBinaryExpression(binExpr, context) {
+          console.log(binExpr.left);
           const leftCode = this.expressionToJava(binExpr.left, context);
           const rightCode = this.expressionToJava(binExpr.right, context);
           if (binExpr.operator === "+") {
             if (this.isStringConcatenation(binExpr, context)) {
+              console.log("str" + leftCode);
               return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             } else if (this.isNumericExpression(binExpr.left, context) && this.isNumericExpression(binExpr.right, context)) {
               if (this.isIntegerExpression(binExpr.left, context) && this.isIntegerExpression(binExpr.right, context)) {
-                return `(${leftCode} + ${rightCode})`;
-              } else {
-                return `(((Number)${leftCode}).doubleValue() + ((Number)${rightCode}).doubleValue())`;
+                return `(int) Runtime.add(${leftCode}, ${rightCode})`;
               }
+              return `(double) Runtime.add(${leftCode}, ${rightCode})`;
             } else {
-              return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
+              console.log("else" + leftCode);
+              return `(String.valueOf(${leftCode}) + String.valueof(${rightCode}))`;
             }
           }
           if (["-", "*", "/", "%"].includes(binExpr.operator)) {
             if (this.isIntegerExpression(binExpr.left, context) && this.isIntegerExpression(binExpr.right, context) && binExpr.operator !== "/") {
-              return `(${leftCode} ${binExpr.operator} ${rightCode})`;
+              switch (binExpr.operator) {
+                case "-":
+                  return `(int) Runtime.sub(${leftCode}, ${rightCode})`;
+                case "*":
+                  return `(int) Runtime.mult(${leftCode}, ${rightCode})`;
+                case "/":
+                  return `(int) Runtime.div(${leftCode}, ${rightCode})`;
+              }
             } else {
-              return `(((Number)${leftCode}).doubleValue() ${binExpr.operator} ((Number)${rightCode}).doubleValue())`;
+              switch (binExpr.operator) {
+                case "-":
+                  return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                case "*":
+                  return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                case "/":
+                  return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+              }
             }
           }
           return `(${leftCode} ${binExpr.operator} ${rightCode})`;
@@ -2243,7 +2394,7 @@ Java code written to: ./compiled/${outputFilename}`);
       async function Repl() {
         const parser = new parser_js_1.default();
         const env = (0, environment_js_1.CreateGlobalEnv)();
-        console.log("\nBrew Repl v2.2.1");
+        console.log("\nBrew Repl 2.3.0");
         console.log("Type 'exit' to quit");
         let readLine;
         if (typeof Deno !== "undefined") {
