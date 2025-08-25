@@ -17,6 +17,7 @@ import {
     ForExpression,
     WhileExpression,
     ArrayLiteral,
+    MemberExpression,
 } from "../frontend/ast.ts";
 import { JAVA_TEMPLATES, TemplateKey } from "./templates.ts";
 
@@ -78,7 +79,9 @@ ${this.fillTemplate("runtime_class", {})}
         func: FunctionDeclaration,
         context: CompilationContext,
     ): void {
-        context.setInMethod(true);
+        const methodContext = new CompilationContext(context.className);
+        methodContext.setInMethod(true);
+
         context.registerFunction(func.name, func.parameters);
 
         const methodBody = func.body
@@ -99,12 +102,40 @@ ${this.fillTemplate("runtime_class", {})}
                     const returnExpr = (stmt as any).value;
                     return returnExpr
                         ? "        return " +
-                              this.expressionToJava(returnExpr, context) +
+                              this.expressionToJava(returnExpr, methodContext) +
                               ";"
                         : "        return null;";
                 }
 
-                const stmtCode = this.statementToJava(stmt, context);
+                // Handle variable declarations within the method
+                if (stmt.kind === "VariableDeclaration") {
+                    const varDecl = stmt as VariableDeclaration;
+                    let javaType = varDecl.value
+                        ? this.getJavaType(varDecl.value)
+                        : "Object";
+                    const javaValue = varDecl.value
+                        ? this.expressionToJava(varDecl.value, methodContext)
+                        : "null";
+
+                    // If the initial value is 0 and it's used in arithmetic contexts treat it as int for better type inference
+                    if (
+                        varDecl.value?.kind === "NumericLiteral" &&
+                        (varDecl.value as NumericLiteral).value === 0
+                    ) {
+                        javaType = "int";
+                    }
+
+                    // Register the variable type in method context
+                    methodContext.registerVariable(
+                        varDecl.identifier,
+                        javaType,
+                    );
+
+                    const modifier = varDecl.constant ? "final " : "";
+                    return `        ${modifier}${javaType} ${varDecl.identifier} = ${javaValue};`;
+                }
+
+                const stmtCode = this.statementToJava(stmt, methodContext);
                 return stmtCode ? "        " + stmtCode : null;
             })
             .filter(Boolean)
@@ -122,7 +153,7 @@ ${this.fillTemplate("runtime_class", {})}
         });
 
         context.addMethod(methodCode);
-        context.setInMethod(false);
+        methodContext.setInMethod(false);
     }
 
     /**
@@ -177,9 +208,37 @@ ${this.fillTemplate("runtime_class", {})}
         if (context.isInMethod()) {
             context.addMainStatement(varCode);
         } else {
-            context.addClassVariable("    private " + varCode);
-            context.registerVariable(varDecl.identifier, javaType);
+            if (varDecl.value && this.isSimpleExpression(varDecl.value)) {
+                context.addClassVariable("    private " + varCode);
+                context.registerVariable(varDecl.identifier, javaType);
+            } else {
+                context.addClassVariable(
+                    `    private ${javaType} ${varDecl.identifier};`,
+                );
+                context.addMainStatement(
+                    `${varDecl.identifier} = ${javaValue};`,
+                );
+                context.registerVariable(varDecl.identifier, javaType);
+            }
         }
+    }
+
+    /**
+     * Determine if an expression is simple (literal or identifier)
+     */
+    private isSimpleExpression(expr: Expression): boolean {
+        if (!expr) return true;
+        return (
+            expr.kind === "NumericLiteral" ||
+            expr.kind === "StringLiteral" ||
+            expr.kind === "Identifier" ||
+            (expr.kind === "ObjectLiteral" &&
+                (expr as ObjectLiteral).properties.length === 0) ||
+            (expr.kind === "ArrayLiteral" &&
+                (expr as ArrayLiteral).elements.every((e) =>
+                    this.isSimpleExpression(e),
+                ))
+        );
     }
 
     /**
@@ -311,6 +370,25 @@ ${this.fillTemplate("runtime_class", {})}
                 );
                 return `new java.util.ArrayList<Object>() {{ ${elements.map((el) => `add(${el});`).join(" ")} }}`;
             }
+            case "MemberExpression": {
+                const memberExpr = expr as MemberExpression;
+                const object = this.expressionToJava(
+                    memberExpr.object,
+                    context,
+                );
+
+                if (memberExpr.computed) {
+                    const property = this.expressionToJava(
+                        memberExpr.property,
+                        context,
+                    );
+                    return `((java.util.ArrayList<Object>)${object}).get((int)${property})`;
+                } else {
+                    const propertyName = (memberExpr.property as Identifier)
+                        .symbol;
+                    return `((HashMap<String, Object>)${object}).get("${propertyName}")`;
+                }
+            }
             default:
                 return "null";
         }
@@ -349,7 +427,7 @@ ${this.fillTemplate("runtime_class", {})}
             // Mixed or unknown types - default to runtime class
             else {
                 console.log("else" + leftCode);
-                return `(String.valueOf(${leftCode}) + String.valueof(${rightCode}))`;
+                return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
         }
 
@@ -365,17 +443,15 @@ ${this.fillTemplate("runtime_class", {})}
                         return `(int) Runtime.sub(${leftCode}, ${rightCode})`;
                     case "*":
                         return `(int) Runtime.mult(${leftCode}, ${rightCode})`;
-                    case "/":
-                        return `(int) Runtime.div(${leftCode}, ${rightCode})`;
                 }
             } else {
                 switch (binExpr.operator) {
                     case "-":
                         return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
                     case "*":
-                        return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                        return `(double) Runtime.mult(${leftCode}, ${rightCode})`;
                     case "/":
-                        return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                        return `(double) Runtime.div(${leftCode}, ${rightCode})`;
                 }
             }
         }
@@ -482,6 +558,8 @@ ${this.fillTemplate("runtime_class", {})}
                     (binExpr.operator === "+" &&
                         !this.isStringConcatenation(binExpr, context))
                 );
+            case "MemberExpression":
+                return (expr as MemberExpression).computed;
             default:
                 return false;
         }
@@ -545,6 +623,26 @@ ${this.fillTemplate("runtime_class", {})}
                     assignExpr.assignee,
                     context,
                 );
+
+                // Check if this is numeric assignment
+                if (assignExpr.value.kind === "BinaryExpression") {
+                    const binExpr = assignExpr.value as BinaryExpression;
+                    if (
+                        binExpr.operator === "+" &&
+                        !this.isStringConcatenation(binExpr, context)
+                    ) {
+                        const left = this.expressionToJava(
+                            binExpr.left,
+                            context,
+                        );
+                        const right = this.expressionToJava(
+                            binExpr.right,
+                            context,
+                        );
+                        return `${assignee} = ((Number)${left}).intValue() + ((Number)${right}).intValue();`;
+                    }
+                }
+
                 const value = this.expressionToJava(assignExpr.value, context);
                 return `${assignee} = ${value};`;
             }

@@ -1142,7 +1142,7 @@
           ["undefined", (0, values_js_1.MakeNull)()],
           ["true", (0, values_js_1.MakeBool)(true)],
           ["false", (0, values_js_1.MakeBool)(false)],
-          ["brewver", (0, values_js_1.MakeString)("Brew v2.3.0")],
+          ["brewver", (0, values_js_1.MakeString)("Brew vBrew")],
           ["print", (0, values_js_1.MakeInternalCall)(functions_js_1.PrintFunction)],
           ["time", (0, values_js_1.MakeInternalCall)(functions_js_1.TimeFunction)],
           ["nat", (0, values_js_1.MakeInternalCall)(functions_js_1.NatFunction)],
@@ -1705,7 +1705,7 @@ public class {{CLASS_NAME}} {
         print: `System.out.println({{ARGS}});`,
         array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`,
         runtime_class: `
-    public class Runtime {
+    class Runtime {
         public static Object add(Object a, Object b) {
             if (a instanceof Number && b instanceof Number) {
                 if (a instanceof Integer && b instanceof Integer) {
@@ -1804,7 +1804,8 @@ ${this.fillTemplate("runtime_class", {})}
          * Compile function declarations with unreachable statement detection
          */
         compileFunctionDeclaration(func, context) {
-          context.setInMethod(true);
+          const methodContext = new CompilationContext(context.className);
+          methodContext.setInMethod(true);
           context.registerFunction(func.name, func.parameters);
           const methodBody = func.body.map((stmt, index) => {
             if (index > 0 && this.isUnreachable(func.body, index))
@@ -1814,9 +1815,20 @@ ${this.fillTemplate("runtime_class", {})}
             }
             if (stmt.kind === "ReturnStatement") {
               const returnExpr = stmt.value;
-              return returnExpr ? "        return " + this.expressionToJava(returnExpr, context) + ";" : "        return null;";
+              return returnExpr ? "        return " + this.expressionToJava(returnExpr, methodContext) + ";" : "        return null;";
             }
-            const stmtCode = this.statementToJava(stmt, context);
+            if (stmt.kind === "VariableDeclaration") {
+              const varDecl = stmt;
+              let javaType = varDecl.value ? this.getJavaType(varDecl.value) : "Object";
+              const javaValue = varDecl.value ? this.expressionToJava(varDecl.value, methodContext) : "null";
+              if (varDecl.value?.kind === "NumericLiteral" && varDecl.value.value === 0) {
+                javaType = "int";
+              }
+              methodContext.registerVariable(varDecl.identifier, javaType);
+              const modifier = varDecl.constant ? "final " : "";
+              return `        ${modifier}${javaType} ${varDecl.identifier} = ${javaValue};`;
+            }
+            const stmtCode = this.statementToJava(stmt, methodContext);
             return stmtCode ? "        " + stmtCode : null;
           }).filter(Boolean).join("\n");
           const parameters = func.parameters.map((param) => `Object ${param}`).join(", ");
@@ -1827,7 +1839,7 @@ ${this.fillTemplate("runtime_class", {})}
             METHOD_BODY: methodBody || "        return null;"
           });
           context.addMethod(methodCode);
-          context.setInMethod(false);
+          methodContext.setInMethod(false);
         }
         /**
          * Detect if a statement is unreachable (after a return)
@@ -1863,9 +1875,23 @@ ${this.fillTemplate("runtime_class", {})}
           if (context.isInMethod()) {
             context.addMainStatement(varCode);
           } else {
-            context.addClassVariable("    private " + varCode);
-            context.registerVariable(varDecl.identifier, javaType);
+            if (varDecl.value && this.isSimpleExpression(varDecl.value)) {
+              context.addClassVariable("    private " + varCode);
+              context.registerVariable(varDecl.identifier, javaType);
+            } else {
+              context.addClassVariable(`    private ${javaType} ${varDecl.identifier};`);
+              context.addMainStatement(`${varDecl.identifier} = ${javaValue};`);
+              context.registerVariable(varDecl.identifier, javaType);
+            }
           }
+        }
+        /**
+         * Determine if an expression is simple (literal or identifier)
+         */
+        isSimpleExpression(expr) {
+          if (!expr)
+            return true;
+          return expr.kind === "NumericLiteral" || expr.kind === "StringLiteral" || expr.kind === "Identifier" || expr.kind === "ObjectLiteral" && expr.properties.length === 0 || expr.kind === "ArrayLiteral" && expr.elements.every((e) => this.isSimpleExpression(e));
         }
         /**
          * Compile if statements
@@ -1964,6 +1990,17 @@ ${thenBody}
               const elements = arrExpr.elements.map((el) => this.expressionToJava(el, context));
               return `new java.util.ArrayList<Object>() {{ ${elements.map((el) => `add(${el});`).join(" ")} }}`;
             }
+            case "MemberExpression": {
+              const memberExpr = expr;
+              const object = this.expressionToJava(memberExpr.object, context);
+              if (memberExpr.computed) {
+                const property = this.expressionToJava(memberExpr.property, context);
+                return `((java.util.ArrayList<Object>)${object}).get((int)${property})`;
+              } else {
+                const propertyName = memberExpr.property.symbol;
+                return `((HashMap<String, Object>)${object}).get("${propertyName}")`;
+              }
+            }
             default:
               return "null";
           }
@@ -1986,7 +2023,7 @@ ${thenBody}
               return `(double) Runtime.add(${leftCode}, ${rightCode})`;
             } else {
               console.log("else" + leftCode);
-              return `(String.valueOf(${leftCode}) + String.valueof(${rightCode}))`;
+              return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
           }
           if (["-", "*", "/", "%"].includes(binExpr.operator)) {
@@ -1996,17 +2033,15 @@ ${thenBody}
                   return `(int) Runtime.sub(${leftCode}, ${rightCode})`;
                 case "*":
                   return `(int) Runtime.mult(${leftCode}, ${rightCode})`;
-                case "/":
-                  return `(int) Runtime.div(${leftCode}, ${rightCode})`;
               }
             } else {
               switch (binExpr.operator) {
                 case "-":
                   return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
                 case "*":
-                  return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                  return `(double) Runtime.mult(${leftCode}, ${rightCode})`;
                 case "/":
-                  return `(double) Runtime.sub(${leftCode}, ${rightCode})`;
+                  return `(double) Runtime.div(${leftCode}, ${rightCode})`;
               }
             }
           }
@@ -2074,6 +2109,8 @@ ${thenBody}
             case "BinaryExpression":
               const binExpr = expr;
               return ["-", "*", "/", "%"].includes(binExpr.operator) || binExpr.operator === "+" && !this.isStringConcatenation(binExpr, context);
+            case "MemberExpression":
+              return expr.computed;
             default:
               return false;
           }
@@ -2118,6 +2155,14 @@ ${thenBody}
             case "AssignmentExpression": {
               const assignExpr = stmt;
               const assignee = this.expressionToJava(assignExpr.assignee, context);
+              if (assignExpr.value.kind === "BinaryExpression") {
+                const binExpr = assignExpr.value;
+                if (binExpr.operator === "+" && !this.isStringConcatenation(binExpr, context)) {
+                  const left = this.expressionToJava(binExpr.left, context);
+                  const right = this.expressionToJava(binExpr.right, context);
+                  return `${assignee} = ((Number)${left}).intValue() + ((Number)${right}).intValue();`;
+                }
+              }
               const value = this.expressionToJava(assignExpr.value, context);
               return `${assignee} = ${value};`;
             }
@@ -2394,7 +2439,7 @@ Java code written to: ./compiled/${outputFilename}`);
       async function Repl() {
         const parser = new parser_js_1.default();
         const env = (0, environment_js_1.CreateGlobalEnv)();
-        console.log("\nBrew Repl 2.3.0");
+        console.log("\nBrew Repl 2.4.0");
         console.log("Type 'exit' to quit");
         let readLine;
         if (typeof Deno !== "undefined") {

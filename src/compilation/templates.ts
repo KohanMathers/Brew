@@ -55,7 +55,7 @@ public class {{CLASS_NAME}} {
     array: `{{TYPE}}[] {{NAME}} = new {{TYPE}}[{{SIZE}}];`,
 
     runtime_class: `
-    public class Runtime {
+    class Runtime {
         public static Object add(Object a, Object b) {
             if (a instanceof Number && b instanceof Number) {
                 if (a instanceof Integer && b instanceof Integer) {

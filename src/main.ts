@@ -162,7 +162,7 @@ async function Repl() {
     const parser = new Parser();
     const env = CreateGlobalEnv();
 
-    console.log("\nBrew Repl 2.3.0");
+    console.log("\nBrew Repl 2.4.0");
     console.log("Type 'exit' to quit");
 
     let readLine: () => Promise<string | null>;
