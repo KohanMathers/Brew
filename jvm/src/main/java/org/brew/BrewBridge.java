@@ -16,6 +16,14 @@ import org.graalvm.polyglot.Context;
  */
 public class BrewBridge {
 
+    /**
+     * Utility class for Brew JVM runtime.
+     * All methods are static; instantiation is not allowed.
+     */
+    private BrewBridge() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
+
     /** The GraalVM polyglot context used to evaluate Brew code. */
     private static final Context context;
 
