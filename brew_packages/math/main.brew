@@ -1,0 +1,14 @@
+export function add(a, b) {
+    return a + b;
+}
+
+export function multiply(a, b) {
+    return a * b;
+}
+
+export const PI = 3.14159;
+
+// Private function - not exported
+function privateHelper(x) {
+    return x * 2;
+}
