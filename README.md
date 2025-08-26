@@ -1,4 +1,4 @@
-# Brew vBrew
+# Brew v2.4.0
 
 **Important: Brew now includes an experimental compiler that translates `.brew` scripts into Java code.**
 
