@@ -3,6 +3,9 @@ package uk.co.kmathers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import org.graalvm.polyglot.Context;
 
@@ -61,9 +64,12 @@ public class BrewBridge {
      * @return The compiled Java bytecode as a String.
      * @throws RuntimeException if the compilation fails.
      */
-    public static String compile(String code, String className) {
+    public static Future<String> compile(String code, String className) {
         try {
-            return context.eval("js", "BrewEngine.compile(" + escapeJSString(code) + ", " + escapeJSString(className) + ");").asString();
+            Callable<String> task = () -> context.eval("js", "BrewEngine.compile(" + escapeJSString(code) + ", " + escapeJSString(className) + ");").asString();
+            FutureTask<String> futureTask = new FutureTask<>(task);
+            new Thread(futureTask).start();
+            return futureTask;
         } catch (Exception e) {
             throw new RuntimeException("Failed to compile Brew code", e);
         }
@@ -76,9 +82,12 @@ public class BrewBridge {
      * @return The result of code execution as a String.
      * @throws RuntimeException if the interpretation fails.
      */
-    public static String interpret(String code) {
+    public static Future<String> interpret(String code) {
         try {
-            return context.eval("js", "BrewEngine.interpret(" + escapeJSString(code) + ");").asString();
+            Callable<String> task = () -> context.eval("js", "BrewEngine.interpret(" + escapeJSString(code) + ");").asString();
+            FutureTask<String> futureTask = new FutureTask<>(task);
+            new Thread(futureTask).start();
+            return futureTask;
         } catch (Exception e) {
             throw new RuntimeException("Failed to interpret Brew code", e);
         }
