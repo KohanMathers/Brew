@@ -118,23 +118,30 @@ public class BrewBridge {
      * @param classBytes The bytecode to build into the jar.
      * @param outputPath The path to output the jar file to (relative).
      */
-    public static void buildJar(String classname, byte[] classBytes, Path outputPath) {
-        try{
-            Manifest manifest = new Manifest();
-            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-            manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, classname);
+    public static Future<Void> buildJar(String classname, byte[] classBytes, Path outputPath) {
+        Callable<Void> task = () -> {
+            try{
+                Manifest manifest = new Manifest();
+                manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+                manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, classname);
 
-            try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(outputPath.toFile()), manifest)) {
-                String entryName = classname.replace('.', '/') + ".class";
-                JarEntry entry = new JarEntry(entryName);
-                jos.putNextEntry(entry);
+                try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(outputPath.toFile()), manifest)) {
+                    String entryName = classname.replace('.', '/') + ".class";
+                    JarEntry entry = new JarEntry(entryName);
+                    jos.putNextEntry(entry);
 
-                jos.write(classBytes);
-                jos.closeEntry();
+                    jos.write(classBytes);
+                    jos.closeEntry();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to build JAR", e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to build JAR", e);
-        }
+
+            return null;
+        };
+        FutureTask<Void> future = new FutureTask<>(task);
+        new Thread(future).start();
+        return future;
     }
 
 
