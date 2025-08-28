@@ -113,6 +113,29 @@ public class BrewBridge {
     }
 
     /**
+     * Compiles given code and builds jar from it
+     * @param code The code to compile.
+     * @param classname The classname to compile / build to.
+     * @param outputPath The path to output the jar file to.
+     * @return A Future representing the asynchronous compilation and JAR creation. The Future completes when the JAR has been built.
+     */
+    public static Future<Void> compileToJar(String code, String classname, Path outputPath) {
+        Callable<Void> task = () -> {
+            String compiled = compile(code, classname).get();
+
+            byte[] classBytes = compiled.getBytes(StandardCharsets.UTF_8);
+
+            buildJar(classname, classBytes, outputPath);
+
+            return null;
+        };
+
+        FutureTask<Void> future = new FutureTask<>(task);
+        new Thread(future).start();
+        return future;
+    }
+
+    /**
      * Builds a jar from the bytecode passed in
      * @param classname The name of the class to build the jar to.
      * @param classBytes The bytecode to build into the jar.
