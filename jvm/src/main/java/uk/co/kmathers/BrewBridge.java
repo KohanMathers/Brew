@@ -1,11 +1,17 @@
 package uk.co.kmathers;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 import org.graalvm.polyglot.Context;
 
@@ -105,6 +111,32 @@ public class BrewBridge {
             throw new RuntimeException("Failed to start REPL", e);
         }
     }
+
+    /**
+     * Builds a jar from the bytecode passed in
+     * @param classname The name of the class to build the jar to.
+     * @param classBytes The bytecode to build into the jar.
+     * @param outputPath The path to output the jar file to (relative).
+     */
+    public static void buildJar(String classname, byte[] classBytes, Path outputPath) {
+        try{
+            Manifest manifest = new Manifest();
+            manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+            manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, classname);
+
+            try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(outputPath.toFile()), manifest)) {
+                String entryName = classname.replace('.', '/') + ".class";
+                JarEntry entry = new JarEntry(entryName);
+                jos.putNextEntry(entry);
+
+                jos.write(classBytes);
+                jos.closeEntry();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to build JAR", e);
+        }
+    }
+
 
     /**
      * Properly escapes Java strings for safe JavaScript evaluation.
