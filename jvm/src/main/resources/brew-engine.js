@@ -1142,7 +1142,7 @@
           ["undefined", (0, values_js_1.MakeNull)()],
           ["true", (0, values_js_1.MakeBool)(true)],
           ["false", (0, values_js_1.MakeBool)(false)],
-          ["brewver", (0, values_js_1.MakeString)("Brew vBrew")],
+          ["brewver", (0, values_js_1.MakeString)("Brew v2.4.0")],
           ["print", (0, values_js_1.MakeInternalCall)(functions_js_1.PrintFunction)],
           ["time", (0, values_js_1.MakeInternalCall)(functions_js_1.TimeFunction)],
           ["nat", (0, values_js_1.MakeInternalCall)(functions_js_1.NatFunction)],
