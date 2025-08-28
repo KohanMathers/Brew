@@ -1142,7 +1142,7 @@
           ["undefined", (0, values_js_1.MakeNull)()],
           ["true", (0, values_js_1.MakeBool)(true)],
           ["false", (0, values_js_1.MakeBool)(false)],
-          ["brewver", (0, values_js_1.MakeString)("Brew v2.4.0")],
+          ["brewver", (0, values_js_1.MakeString)("Brew v2.5.0")],
           ["print", (0, values_js_1.MakeInternalCall)(functions_js_1.PrintFunction)],
           ["time", (0, values_js_1.MakeInternalCall)(functions_js_1.TimeFunction)],
           ["nat", (0, values_js_1.MakeInternalCall)(functions_js_1.NatFunction)],
@@ -2439,7 +2439,7 @@ Java code written to: ./compiled/${outputFilename}`);
       async function Repl() {
         const parser = new parser_js_1.default();
         const env = (0, environment_js_1.CreateGlobalEnv)();
-        console.log("\nBrew Repl 2.4.0");
+        console.log("\nBrew Repl 2.5.0");
         console.log("Type 'exit' to quit");
         let readLine;
         if (typeof Deno !== "undefined") {
