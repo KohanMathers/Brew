@@ -9,3 +9,5 @@ update-version.js
 jvm/target
 brew-engine.js
 build-to-jar.js
+TestBrewJVM.java
+TestBrewJVM.class

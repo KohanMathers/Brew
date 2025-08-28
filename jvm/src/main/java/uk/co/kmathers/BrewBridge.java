@@ -14,6 +14,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
 
 /**
  * The {@code BrewBridge} class provides a Java interface to the Brew language runtime.
@@ -47,14 +48,10 @@ public class BrewBridge {
             // Load the Brew engine code from the classpath
             String engineCode;
             try (InputStream is = BrewBridge.class.getClassLoader().getResourceAsStream("brew-engine.js")) {
-                if (is == null) {
-                    throw new RuntimeException("Could not find brew-engine.js in classpath");
-                }
+                if (is == null) throw new RuntimeException("Could not find brew-engine.js in classpath");
                 engineCode = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
-
             context.eval("js", engineCode);
-
         } catch (IOException e) {
             throw new RuntimeException("Failed to load brew-engine.js", e);
         } catch (RuntimeException e) {
@@ -64,6 +61,7 @@ public class BrewBridge {
 
     /**
      * Compiles Brew code into Java bytecode.
+     * Dynamically handles different return types from BrewEngine.
      *
      * @param code      The Brew source code to compile.
      * @param className The name of the generated Java class.
@@ -71,31 +69,96 @@ public class BrewBridge {
      * @throws RuntimeException if the compilation fails.
      */
     public static Future<String> compile(String code, String className) {
-        try {
-            Callable<String> task = () -> context.eval("js", "BrewEngine.compile(" + escapeJSString(code) + ", " + escapeJSString(className) + ");").asString();
-            FutureTask<String> futureTask = new FutureTask<>(task);
-            new Thread(futureTask).start();
-            return futureTask;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to compile Brew code", e);
-        }
+        Callable<String> task = () -> {
+            Value result = context.eval("js",
+                    "BrewEngine.compile(" + escapeJSString(code) + ", " + escapeJSString(className) + ")"
+            );
+            
+            return handleJavaScriptResult(result);
+        };
+        FutureTask<String> futureTask = new FutureTask<>(task);
+        new Thread(futureTask).start();
+        return futureTask;
     }
 
     /**
      * Interprets Brew code immediately without compilation.
+     * Dynamically handles different return types from BrewEngine.
      *
      * @param code The Brew code to interpret.
      * @return The result of code execution as a String.
      * @throws RuntimeException if the interpretation fails.
      */
     public static Future<String> interpret(String code) {
-        try {
-            Callable<String> task = () -> context.eval("js", "BrewEngine.interpret(" + escapeJSString(code) + ");").asString();
-            FutureTask<String> futureTask = new FutureTask<>(task);
-            new Thread(futureTask).start();
-            return futureTask;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to interpret Brew code", e);
+        Callable<String> task = () -> {
+            Value result = context.eval("js",
+                    "BrewEngine.interpret(" + escapeJSString(code) + ")"
+            );
+            
+            return handleJavaScriptResult(result);
+        };
+        FutureTask<String> futureTask = new FutureTask<>(task);
+        new Thread(futureTask).start();
+        return futureTask;
+    }
+
+    /**
+     * Handles different types of JavaScript return values
+     * @param value The JavaScript value to process
+     * @return The final string result
+     * @throws RuntimeException if processing fails
+     */
+    private static String handleJavaScriptResult(Value value) throws RuntimeException {
+        if (value.isNull()) {
+            throw new RuntimeException("BrewEngine method returned null");
+        }
+
+        System.out.println("Promise detected, attempting to resolve...");
+        
+        context.getBindings("js").putMember("_tempResult", value);
+        
+        Value isUndefined = context.eval("js", "_tempResult === undefined");
+        if (isUndefined.asBoolean()) {
+            throw new RuntimeException("BrewEngine method returned undefined - the method may have failed or doesn't return a value");
+        }
+        
+        Value isPromise = context.eval("js", 
+            "_tempResult != null && typeof _tempResult === 'object' && typeof _tempResult.then === 'function'");
+            
+        if (isPromise.asBoolean()) {
+            System.out.println("Promise detected, attempting to resolve...");
+
+            Value resolved = context.eval("js", "(async () => await _tempResult)()");
+            
+            context.eval("js", "delete globalThis._tempResult");
+
+            if (resolved.isString()) {
+                return resolved.asString();
+            } else {
+                return resolved.toString();
+            }
+        } else if (value.isString()) {
+            context.eval("js", "delete globalThis._tempResult");
+            return value.asString();
+        } else {
+            Value typeInfo = context.eval("js", "'Type: ' + typeof _tempResult + ', Value: ' + String(_tempResult)");
+            String typeStr = typeInfo.asString();
+            
+            context.eval("js", "delete globalThis._tempResult");
+            
+            if (value.hasMembers()) {
+                try {
+                    context.getBindings("js").putMember("_tempResult", value);
+                    Value stringified = context.eval("js", "JSON.stringify(_tempResult)");
+                    context.eval("js", "delete globalThis._tempResult");
+                    return stringified.asString();
+                } catch (Exception e) {
+                    context.eval("js", "delete globalThis._tempResult");
+                    throw new RuntimeException("BrewEngine returned complex object: " + typeStr + " - " + e.getMessage());
+                }
+            }
+            
+            return value.toString();
         }
     }
 
@@ -106,14 +169,14 @@ public class BrewBridge {
      */
     public static void repl() {
         try {
-            context.eval("js", "BrewEngine.repl();");
+            context.eval("js", "BrewEngine.repl();"); // REPL should remain blocking
         } catch (Exception e) {
             throw new RuntimeException("Failed to start REPL", e);
         }
     }
 
     /**
-     * Compiles given code and builds jar from it
+     * Compiles given code and builds jar from it.
      * @param code The code to compile.
      * @param classname The classname to compile / build to.
      * @param outputPath The path to output the jar file to.
@@ -122,28 +185,24 @@ public class BrewBridge {
     public static Future<Void> compileToJar(String code, String classname, Path outputPath) {
         Callable<Void> task = () -> {
             String compiled = compile(code, classname).get();
-
             byte[] classBytes = compiled.getBytes(StandardCharsets.UTF_8);
-
-            buildJar(classname, classBytes, outputPath);
-
+            buildJar(classname, classBytes, outputPath).get();
             return null;
         };
-
         FutureTask<Void> future = new FutureTask<>(task);
         new Thread(future).start();
         return future;
     }
 
     /**
-     * Builds a jar from the bytecode passed in
+     * Builds a jar from the bytecode passed in.
      * @param classname The name of the class to build the jar to.
      * @param classBytes The bytecode to build into the jar.
-     * @param outputPath The path to output the jar file to (relative).
+     * @param outputPath The path to output the jar file to.
      */
     public static Future<Void> buildJar(String classname, byte[] classBytes, Path outputPath) {
         Callable<Void> task = () -> {
-            try{
+            try {
                 Manifest manifest = new Manifest();
                 manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
                 manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, classname);
@@ -152,21 +211,18 @@ public class BrewBridge {
                     String entryName = classname.replace('.', '/') + ".class";
                     JarEntry entry = new JarEntry(entryName);
                     jos.putNextEntry(entry);
-
                     jos.write(classBytes);
                     jos.closeEntry();
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to build JAR", e);
             }
-
             return null;
         };
         FutureTask<Void> future = new FutureTask<>(task);
         new Thread(future).start();
         return future;
     }
-
 
     /**
      * Properly escapes Java strings for safe JavaScript evaluation.
@@ -188,8 +244,6 @@ public class BrewBridge {
      * Should be called when the runtime is no longer needed.
      */
     public static void cleanup() {
-        if (context != null) {
-            context.close();
-        }
+        if (context != null) context.close();
     }
 }
