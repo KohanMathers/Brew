@@ -19,7 +19,8 @@ export type NodeType =
     | "BinaryExpression"
     | "ComparisonExpression"
     | "ForExpression"
-    | "WhileExpression";
+    | "WhileExpression"
+    | "ImportStatement";
 
 /**
  * Base interface for any node in the syntax tree
@@ -202,4 +203,12 @@ export interface IfStatement extends Stmt {
 export interface ReturnStatement extends Stmt {
     kind: "ReturnStatement";
     value?: Expression;
+}
+
+/**
+ * Import statement node
+ */
+export interface ImportStatement extends Stmt {
+    kind: "ImportStatement";
+    value: String;
 }

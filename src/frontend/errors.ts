@@ -83,3 +83,12 @@ export class FunctionError extends CustomError {
         super(message);
     }
 }
+
+/**
+ * Thrown when an import fails
+ */
+export class ImportError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}

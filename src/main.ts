@@ -156,6 +156,15 @@ async function Compile(filename: string, className?: string) {
 }
 
 /**
+ * Installs a package in the current environment
+ * @param githubRepo The repository to download the package from, in format author.repo
+ * @param packageName The package to download
+ * @example install kohanmathers.brew-packages example
+ * Note to package developers: Lay out the entry point to your package as brew_packages/<packageName>/main.brew, as everything in brew_packages/<packageName> will be downloaded.
+ */
+async function Install(githubRepo: string, packageName: string) {}
+
+/**
  * Cross-platform REPL that works universally
  */
 async function Repl() {

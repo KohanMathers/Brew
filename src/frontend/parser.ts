@@ -19,6 +19,7 @@ import {
     WhileExpression,
     ArrayLiteral,
     ReturnStatement,
+    ImportStatement,
 } from "./ast.ts";
 import { tokenize, Token, TokenType } from "./lexer.ts";
 import { FunctionError, ParseError } from "./errors.ts";
@@ -113,7 +114,10 @@ export default class Parser {
      */
     private ParseStatement(): Stmt {
         switch (this.At().type) {
+            case TokenType.Import:
+                return this.ParseImportStatement();
             case TokenType.Let:
+                return this.ParseVariableDeclaration();
             case TokenType.Const:
                 return this.ParseVariableDeclaration();
             case TokenType.Function:
@@ -210,6 +214,23 @@ export default class Parser {
             condition,
             body,
         } as WhileExpression;
+    }
+
+    /**
+     * Parses an import statement
+     */
+    private ParseImportStatement(): Stmt {
+        this.Next();
+        const value = this.Expect(
+            TokenType.Identifier,
+            "Expected package name after import keyword.",
+        ).value;
+        this.ExpectSemicolon("import statement");
+        
+        return {
+            kind: "ImportStatement",
+            value,
+        } as ImportStatement;
     }
 
     /**

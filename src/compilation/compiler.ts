@@ -401,14 +401,12 @@ ${this.fillTemplate("runtime_class", {})}
         binExpr: BinaryExpression,
         context: CompilationContext,
     ): string {
-        console.log(binExpr.left);
         const leftCode = this.expressionToJava(binExpr.left, context);
         const rightCode = this.expressionToJava(binExpr.right, context);
 
         if (binExpr.operator === "+") {
             // Check if this is string concatenation
             if (this.isStringConcatenation(binExpr, context)) {
-                console.log("str" + leftCode);
                 return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
             // Pure numeric addition
@@ -426,7 +424,6 @@ ${this.fillTemplate("runtime_class", {})}
             }
             // Mixed or unknown types - default to runtime class
             else {
-                console.log("else" + leftCode);
                 return `(String.valueOf(${leftCode}) + String.valueOf(${rightCode}))`;
             }
         }

@@ -60,8 +60,8 @@ export function CreateGlobalEnv() {
  * Env class – handles vars, scopes, all that
  */
 export default class Environment {
-    private parent?: Environment;
-    private variables: Map<string, RuntimeValue>;
+    public parent?: Environment;
+    public variables: Map<string, RuntimeValue>;
     private constants: Set<string>;
 
     constructor(parentEnv?: Environment) {

@@ -9,6 +9,8 @@ declare global {
                   path: string,
                   options?: { recursive?: boolean },
               ): Promise<void>;
+              existsSync(path: string): boolean;
+              readTextFileSync(path: string): string;
           }
         | undefined;
 
@@ -65,5 +67,37 @@ export const compat = {
             return;
         }
         throw new Error("mkdir not supported in this environment");
+    },
+
+    // Note: This function is not currently working correctly in Deno, wroking status is unknown in other environments.
+
+    existsSync: (path: string): boolean => {
+        if (isDeno && Deno) {
+            try {
+                Deno.existsSync(path);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+        if (isJava && Java) {
+            const Files = Java.type("java.nio.file.Files");
+            const Paths = Java.type("java.nio.file.Paths");
+            return Files.exists(Paths.get(path));
+        }
+        throw new Error("existsSync not supported in this environment");
+    },
+
+    readFileSync: (path: string, encoding: string): string => {
+        if (isDeno && Deno) {
+            return Deno.readTextFileSync(path);
+        }
+        if (isJava && Java) {
+            const Files = Java.type("java.nio.file.Files");
+            const Paths = Java.type("java.nio.file.Paths");
+            const bytes = Files.readAllBytes(Paths.get(path));
+            return new Java.type("java.lang.String")(bytes, "UTF-8");
+        }
+        throw new Error("readFileSync not supported in this environment");
     },
 };

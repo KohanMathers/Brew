@@ -1,5 +1,6 @@
 import {
     FunctionDeclaration,
+    ImportStatement,
     Program,
     ReturnStatement,
     VariableDeclaration,
@@ -10,8 +11,12 @@ import {
     FunctionValue,
     MakeNull,
     MakeReturn,
+    ObjectValue,
     RuntimeValue,
 } from "../../runtime/values.ts";
+import { compat } from "../../compat.ts";
+import { ImportError } from "../errors.ts";
+import Parser from "../parser.ts";
 
 /**
  * Evaluates a program
@@ -84,4 +89,65 @@ export function EvaluateReturnStatement(
 ): RuntimeValue {
     const value = statement.value ? Evaluate(statement.value, env) : MakeNull();
     return MakeReturn(value);
+}
+
+/**
+ * Evaluates an import statement
+ * Reads from ./brew_packages/<package_name>/main.brew and evaluates it in a new environment
+ * If the package is not found, throws an error
+ */
+export function EvaluateImportStatement(
+    statement: ImportStatement,
+    env: Environment,
+): RuntimeValue {
+    const packageName = statement.value as string;
+    const packagePath = `./brew_packages/${packageName}/main.brew`;
+    
+    try {
+        /* Currently commented out as this triggers even if the package is installed, must work out why this is happening - for further information, read ../../compat.ts
+
+        if (!compat.existsSync(packagePath)) {
+            throw new ImportError(`Package '${packageName}' not found. Please make sure it is installed.`);
+        }
+        */
+
+        const packageSource = compat.readFileSync(packagePath, "utf-8");
+
+        const parser = new Parser();
+        const packageAST = parser.ProduceAST(packageSource);
+
+        let globalEnv = env;
+        while (globalEnv.parent) {
+            globalEnv = globalEnv.parent;
+        }
+
+        const packageEnv = new Environment(globalEnv);
+        
+        let packageExports: RuntimeValue = MakeNull();
+        for (const stmt of packageAST.body) {
+            packageExports = Evaluate(stmt, packageEnv);
+        }
+
+        const packageObject = new Map<string, RuntimeValue>();
+        for (const [varName, value] of packageEnv.variables) {
+            if (!globalEnv.variables.has(varName)) {
+                packageObject.set(varName, value);
+            }
+        }
+
+        const packageValue: ObjectValue = {
+            type: "object",
+            properties: packageObject,
+        };
+
+        env.declareVariable(packageName, packageValue, false);
+
+        return packageValue;
+    } catch (error) {
+        if (error instanceof ImportError) {
+            throw error;
+        } else {
+            throw new ImportError(`Failed to import package '${packageName}': ${error}`);
+        }
+    }
 }

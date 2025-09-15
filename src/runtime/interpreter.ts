@@ -19,6 +19,7 @@ import {
     ArrayLiteral,
     ReturnStatement,
     MemberExpression,
+    ImportStatement,
 } from "../frontend/ast.ts";
 
 import { InterpretError } from "../frontend/errors.ts";
@@ -26,6 +27,7 @@ import Environment from "./environment.ts";
 
 import {
     EvaluateFunctionDeclaration,
+    EvaluateImportStatement,
     EvaluateProgram,
     EvaluateReturnStatement,
     EvaluateVariableDeclaration,
@@ -115,6 +117,9 @@ export function Evaluate(astNode: Stmt, env: Environment): RuntimeValue {
 
         case "MemberExpression":
             return EvaluateMemberExpression(astNode as MemberExpression, env);
+
+        case "ImportStatement":
+            return EvaluateImportStatement(astNode as ImportStatement, env);
 
         default:
             throw new InterpretError(

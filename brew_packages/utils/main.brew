@@ -1,7 +1,7 @@
-export function greet(name) {
+function greet(name) {
     return "Hello, " + name;
 }
 
-export function timestamp() {
+function timestamp() {
     return time();
 }
