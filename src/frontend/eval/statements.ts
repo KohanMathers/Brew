@@ -100,12 +100,22 @@ export function EvaluateImportStatement(
     statement: ImportStatement,
     env: Environment,
 ): RuntimeValue {
-    const packageName = statement.value as string;
-    const packagePath = `./brew_packages/${packageName}/main.brew`;
+    const importPath = statement.value as string;
+    let packagePath: string;
+    let packageName: string;
+    
+    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+        packagePath = importPath.endsWith('.brew') ? importPath : `${importPath}.brew`;
+        packageName = importPath.split('/').pop()?.replace('.brew', '') || importPath;
+    } else {
+        packagePath = `./brew_packages/${importPath}/main.brew`;
+        packageName = importPath;
+    }
     
     try {
         if (!compat.existsSync(packagePath)) {
-            throw new ImportError(`Package '${packageName}' not found. Please make sure it is installed.`);
+            const pathType = importPath.startsWith('./') || importPath.startsWith('../') ? 'file' : 'package';
+            throw new ImportError(`${pathType === 'file' ? 'File' : 'Package'} '${importPath}' not found. ${pathType === 'package' ? 'Please make sure it is installed.' : 'Please check the file path.'}`);
         }
 
         const packageSource = compat.readFileSync(packagePath, "utf-8");
@@ -144,7 +154,7 @@ export function EvaluateImportStatement(
         if (error instanceof ImportError) {
             throw error;
         } else {
-            throw new ImportError(`Failed to import package '${packageName}': ${error}`);
+            throw new ImportError(`Failed to import '${importPath}': ${error}`);
         }
     }
 }

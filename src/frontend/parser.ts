@@ -221,10 +221,36 @@ export default class Parser {
      */
     private ParseImportStatement(): Stmt {
         this.Next();
-        const value = this.Expect(
-            TokenType.Identifier,
-            "Expected package name after import keyword.",
-        ).value;
+        
+        let value: string = "";
+        
+        while (this.At().type !== TokenType.Semicolon && this.NotEOF()) {
+            const token = this.Next();
+            
+            switch (token.type) {
+                case TokenType.Identifier:
+                case TokenType.Number:
+                    value += token.value;
+                    break;
+                case TokenType.Dot:
+                    value += ".";
+                    break;
+                case TokenType.BinaryOperator:
+                    if (token.value === "/") {
+                        value += "/";
+                    } else {
+                        throw new ParseError(`Unexpected operator '${token.value}' in import path.`);
+                    }
+                    break;
+                default:
+                    throw new ParseError(`Unexpected token in import path: ${token.value}`);
+            }
+        }
+        
+        if (value === "") {
+            throw new ParseError("Expected import path after import keyword.");
+        }
+        
         this.ExpectSemicolon("import statement");
         
         return {
