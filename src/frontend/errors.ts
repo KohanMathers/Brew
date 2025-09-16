@@ -92,3 +92,12 @@ export class ImportError extends CustomError {
         super(message);
     }
 }
+
+/**
+ * Thrown when an install fails
+ */
+export class InstallError extends CustomError {
+    constructor(message: string) {
+        super(message);
+    }
+}

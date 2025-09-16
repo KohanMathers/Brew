@@ -4,6 +4,7 @@ import { Evaluate } from "./runtime/interpreter.ts";
 import { CreateGlobalEnv } from "./runtime/environment.ts";
 import { JavaCompiler } from "./compilation/compiler.ts";
 import { compat } from "./compat.ts";
+import { InstallError } from "./frontend/errors.ts";
 
 // Global BrewEngine object for library usage
 const BrewEngine = {
@@ -161,16 +162,210 @@ async function Compile(filename: string, className?: string) {
  * Installs a package in the current environment
  * @param githubRepo The repository to download the package from, in format author.repo
  * @param packageName The package to download
- * @example install kohanmathers.brew-packages example
+ * @example install kohanmathers.brew-packages time
  * Note to package developers: Lay out the entry point to your package as brew_packages/<packageName>/main.brew, as everything in brew_packages/<packageName> will be downloaded.
  */
 async function Install(githubRepo: string, packageName: string) {
     const splitRepo = githubRepo.split(".");
     const repoAuthor = splitRepo[0];
     const repoName = splitRepo[1];
-    const repoLink = "https://github.com/" + repoAuthor + "/" + repoName;
+    
+    console.log(`Installing package '${packageName}' from ${repoAuthor}/${repoName}...`);
+    
+    try {
+        await downloadPackageContents(repoAuthor, repoName, packageName);
+        console.log(`Successfully installed package '${packageName}'`);
+        
+    } catch (error) {
+        console.error(`Installation failed: ${error}`);
+        throw error;
+    }
+}
 
-    console.log(repoLink)
+/**
+ * Downloads the package contents using GitHub Contents API
+ */
+async function downloadPackageContents(repoAuthor: string, repoName: string, packageName: string) {
+    const packagePath = `brew_packages/${packageName}`;
+    const apiUrl = `https://api.github.com/repos/${repoAuthor}/${repoName}/contents/${packagePath}`;
+    
+    console.log(`Fetching package contents from: ${packagePath}`);
+    
+    const response = await fetch(apiUrl, {
+        headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'brew-package-installer'
+        }
+    });
+    
+    if (response.status === 404) {
+        throw new Error(`Package '${packageName}' not found in repository. Expected path: ${packagePath}`);
+    }
+    
+    if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const contents = await response.json();
+    
+    if (!Array.isArray(contents)) {
+        throw new Error(`Expected directory at ${packagePath}, but found a file`);
+    }
+    
+    await createInstallDirectory(packageName);
+    
+    await downloadContentsRecursive(contents, packageName, '');
+    
+    await verifyEntryPoint(packageName);
+}
+
+/**
+ * Recursively downloads all contents from a directory
+ */
+async function downloadContentsRecursive(contents: any[], packageName: string, relativePath: string) {
+    for (const item of contents) {
+        const itemPath = relativePath ? `${relativePath}/${item.name}` : item.name;
+        
+        if (item.type === 'file') {
+            console.log(`Downloading: ${itemPath}`);
+            await downloadFile(item.download_url, packageName, itemPath);
+            
+        } else if (item.type === 'dir') {
+            console.log(`Creating directory: ${itemPath}`);
+            await createDirectory(packageName, itemPath);
+            
+            const subDirResponse = await fetch(item.url, {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'brew-package-installer'
+                }
+            });
+            
+            if (subDirResponse.ok) {
+                const subContents = await subDirResponse.json();
+                await downloadContentsRecursive(subContents, packageName, itemPath);
+            } else {
+                console.warn(`Failed to fetch subdirectory: ${itemPath}`);
+            }
+        }
+    }
+}
+
+/**
+ * Downloads a single file
+ */
+async function downloadFile(downloadUrl: string, packageName: string, filePath: string) {
+    const response = await fetch(downloadUrl);
+    
+    if (!response.ok) {
+        throw new Error(`Failed to download file: ${filePath}`);
+    }
+    
+    const content = await response.text();
+    await saveFile(packageName, filePath, content);
+}
+
+async function createInstallDirectory(packageName: string) {
+    const installDir = `brew_packages/${packageName}`;
+    await compat.mkdir(installDir);
+    return installDir;
+}
+
+async function createDirectory(packageName: string, dirPath: string) {
+    const fullPath = `brew_packages/${packageName}/${dirPath}`;
+    await compat.mkdir(fullPath);
+}
+
+async function saveFile(packageName: string, filePath: string, content: string) {
+    const fullPath = `brew_packages/${packageName}/${filePath}`;
+    await compat.writeTextFile(fullPath, content);
+}
+
+async function verifyEntryPoint(packageName: string) {
+    const mainBrewPath = `brew_packages/${packageName}/main.brew`;
+    
+    try {
+        if (compat.existsSync(mainBrewPath)) {
+            console.log(`✓ Found entry point: main.brew`);
+        } else {
+            console.warn(`⚠ Warning: main.brew not found in package '${packageName}'`);
+        }
+    } catch {
+        console.warn(`⚠ Warning: Could not verify main.brew in package '${packageName}'`);
+    }
+}
+
+async function createInstallDirectoryBrowser(packageName: string) {
+    return {};
+}
+
+async function saveFileBrowser(packageName: string, filePath: string, content: string, storage: any) {
+    storage[filePath] = content;
+    return storage;
+}
+
+/**
+ * Browser-compatible version that returns files as an object
+ */
+async function downloadPackageContentsBrowser(repoAuthor: string, repoName: string, packageName: string) {
+    const packagePath = `brew_packages/${packageName}`;
+    const apiUrl = `https://api.github.com/repos/${repoAuthor}/${repoName}/contents/${packagePath}`;
+    
+    const response = await fetch(apiUrl, {
+        headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'brew-package-installer'
+        }
+    });
+    
+    if (response.status === 404) {
+        throw new Error(`Package '${packageName}' not found in repository. Expected path: ${packagePath}`);
+    }
+    
+    if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const contents = await response.json();
+    const files: { [path: string]: string } = {};
+    
+    await downloadContentsRecursiveBrowser(contents, files, '');
+    
+    if (!files['main.brew']) {
+        console.warn(`⚠ Warning: main.brew not found in package '${packageName}'`);
+    } else {
+        console.log(`✓ Found entry point: main.brew`);
+    }
+    
+    return files;
+}
+
+async function downloadContentsRecursiveBrowser(contents: any[], files: any, relativePath: string) {
+    for (const item of contents) {
+        const itemPath = relativePath ? `${relativePath}/${item.name}` : item.name;
+        
+        if (item.type === 'file') {
+            console.log(`Downloading: ${itemPath}`);
+            const response = await fetch(item.download_url);
+            const content = await response.text();
+            files[itemPath] = content;
+            
+        } else if (item.type === 'dir') {
+            console.log(`Processing directory: ${itemPath}`);
+            
+            const subDirResponse = await fetch(item.url, {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'brew-package-installer'
+                }
+            });
+            
+            if (subDirResponse.ok) {
+                const subContents = await subDirResponse.json();
+                await downloadContentsRecursiveBrowser(subContents, files, itemPath);
+            }
+        }
+    }
 }
 
 /**
