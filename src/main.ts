@@ -90,6 +90,12 @@ if (!isJVM && (hasArgs || typeof Deno !== "undefined")) {
             Compile(args[1], args[2]);
         } else if (args[0] === "install") {
             Install(args[1], args[2]);
+        } else if (args[0] === "remove") {
+            Remove(args[1]);
+        } else if (args[0] === "list") {
+            List();
+        } else if (args[0] === "show") {
+            Info(args[1]);
         } else {
             console.error("Unknown command: " + args[0]);
             compat.exit(1);
@@ -181,6 +187,173 @@ async function Install(githubRepo: string, packageName: string) {
         throw error;
     }
 }
+
+/**
+ * Removes a package from the current environment
+ * @param packageName the package to remove
+ * @example remove time
+ */
+async function Remove(packageName: string) {
+    console.log(`Remove package '${packageName}'...`);
+
+    try {
+        const packagePath = `./brew_packages/${packageName}`;
+
+        if(!compat.existsSync(packagePath)) {
+            console.warn(`Package ${packageName} is not installed`)
+            return;
+        }
+
+        await removeDirectory(packagePath);
+
+        console.log(`Successfully removed package '${packageName}'`)
+    } catch(error){
+        console.error(`Failed to remo psckage ${packageName}: ${error}`)
+        throw error;
+    }
+}
+
+/**
+ * Lists all installed packages
+ */
+async function List(): Promise<string[]> {
+    console.log("Installed packages:");
+    
+    try {
+        const brewPackagesDir = "brew_packages";
+        
+        if (!compat.existsSync(brewPackagesDir)) {
+            console.log("No packages installed (brew_packages directory doesn't exist)");
+            return [];
+        }
+        
+        const entries = await compat.getDirectoryEntries(brewPackagesDir);
+        const packages = entries
+            .filter((entry: { isDirectory: any; }) => entry.isDirectory)
+            .map((entry: { name: any; }) => entry.name);
+        
+        if (packages.length === 0) {
+            console.log("No packages installed");
+            return [];
+        }
+        
+        packages.forEach((pkg: any) => {
+            console.log(`  - ${pkg}`);
+        });
+        
+        console.log(`\nTotal: ${packages.length} package(s)`);
+        return packages;
+        
+    } catch (error) {
+        console.error(`Failed to list packages: ${error}`);
+        return [];
+    }
+}
+
+/**
+ * Shows detailed information about a package
+ */
+async function Info(packageName: string) {
+    console.log(`Package information for '${packageName}':`);
+    
+    try {
+        const packagePath = `brew_packages/${packageName}`;
+        
+        if (!compat.existsSync(packagePath)) {
+            console.log(`Package '${packageName}' is not installed`);
+            return;
+        }
+        
+        const mainBrewPath = `${packagePath}/main.brew`;
+        const hasMainBrew = compat.existsSync(mainBrewPath);
+        
+        console.log(`  Location: ${packagePath}`);
+        console.log(`  Entry point: ${hasMainBrew ? '✓ main.brew found' : '✗ main.brew missing'}`);
+        
+        const entries = await compat.getDirectoryEntries(packagePath);
+        const fileCount = await countFilesRecursive(packagePath);
+        
+        console.log(`  Files: ${fileCount} total`);
+        console.log(`  Direct contents: ${entries.length} items`);
+        
+        if (hasMainBrew) {
+            try {
+                const mainContent = await compat.readTextFile(mainBrewPath);
+                const preview = mainContent.split('\n').slice(0, 5).join('\n');
+                console.log(`  Preview of main.brew:`);
+                console.log(`    ${preview.replace(/\n/g, '\n    ')}`);
+                if (mainContent.split('\n').length > 5) {
+                    console.log(`    ... (${mainContent.split('\n').length - 5} more lines)`);
+                }
+            } catch (error) {
+                console.log(`  Could not read main.brew: ${error}`);
+            }
+        }
+        
+    } catch (error) {
+        console.error(`Failed to get package info: ${error}`);
+    }
+}
+
+/**
+ * Cross-platform REPL that works universally
+ */
+async function Repl() {
+    const parser = new Parser();
+    const env = CreateGlobalEnv();
+
+    console.log("\nBrew Repl 2.5.0");
+    console.log("Type 'exit' to quit");
+
+    let readLine: () => Promise<string | null>;
+
+    if (typeof Deno !== "undefined") {
+        // Deno / Browser
+        readLine = async () => prompt("> ");
+    } else if (typeof Java !== "undefined") {
+        // JVM - Make this non-blocking by returning immediately
+        console.log("REPL not supported in JVM library mode");
+        return;
+    } else {
+        throw new Error("No REPL supported in this environment");
+    }
+
+    await universalRepl(parser, env, readLine);
+    compat.exit(0);
+}
+
+/**
+ * Universal REPL handler
+ */
+async function universalRepl(
+    parser: Parser,
+    env: any,
+    readLine: () => Promise<string | null>,
+) {
+    while (true) {
+        const input = await readLine();
+
+        if (input === null || input.trim() === "exit") {
+            console.log("Goodbye!");
+            break;
+        }
+
+        if (!input.trim()) continue;
+
+        try {
+            const program = parser.ProduceAST(input);
+            Evaluate(program, env);
+        } catch (error) {
+            if (error instanceof Error)
+                console.error(`${error.name}: ${error.message}`);
+            else console.error("Unknown error:", error);
+        }
+    }
+}
+
+/**
+ * Helper functions
+ */
 
 /**
  * Downloads the package contents using GitHub Contents API
@@ -368,58 +541,46 @@ async function downloadContentsRecursiveBrowser(contents: any[], files: any, rel
     }
 }
 
+
 /**
- * Cross-platform REPL that works universally
+ * Recursively removes a directory and all its contents
  */
-async function Repl() {
-    const parser = new Parser();
-    const env = CreateGlobalEnv();
-
-    console.log("\nBrew Repl 2.5.0");
-    console.log("Type 'exit' to quit");
-
-    let readLine: () => Promise<string | null>;
-
-    if (typeof Deno !== "undefined") {
-        // Deno / Browser
-        readLine = async () => prompt("> ");
-    } else if (typeof Java !== "undefined") {
-        // JVM - Make this non-blocking by returning immediately
-        console.log("REPL not supported in JVM library mode");
+async function removeDirectory(dirPath: string) {
+    if (!compat.existsSync(dirPath)) {
         return;
-    } else {
-        throw new Error("No REPL supported in this environment");
     }
-
-    await universalRepl(parser, env, readLine);
-    compat.exit(0);
+    
+    const entries = await compat.getDirectoryEntries(dirPath);
+    
+    for (const entry of entries) {
+        const fullPath = `${dirPath}/${entry.name}`;
+        
+        if (entry.isDirectory) {
+            await removeDirectory(fullPath);
+        } else {
+            await compat.removeFile(fullPath);
+            console.log(`Removed file: ${entry.name}`);
+        }
+    }
+    
+    await compat.removeDirOnly(dirPath);
+    console.log(`Removed directory: ${dirPath}`);
 }
 
 /**
- * Universal REPL handler
+ * Recursively counts all files in a directory
  */
-async function universalRepl(
-    parser: Parser,
-    env: any,
-    readLine: () => Promise<string | null>,
-) {
-    while (true) {
-        const input = await readLine();
-
-        if (input === null || input.trim() === "exit") {
-            console.log("Goodbye!");
-            break;
-        }
-
-        if (!input.trim()) continue;
-
-        try {
-            const program = parser.ProduceAST(input);
-            Evaluate(program, env);
-        } catch (error) {
-            if (error instanceof Error)
-                console.error(`${error.name}: ${error.message}`);
-            else console.error("Unknown error:", error);
+async function countFilesRecursive(dirPath: string): Promise<number> {
+    let count = 0;
+    const entries = await compat.getDirectoryEntries(dirPath);
+    
+    for (const entry of entries) {
+        if (entry.isDirectory) {
+            count += await countFilesRecursive(`${dirPath}/${entry.name}`);
+        } else {
+            count++;
         }
     }
+    
+    return count;
 }
