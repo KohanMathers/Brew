@@ -104,12 +104,9 @@ export function EvaluateImportStatement(
     const packagePath = `./brew_packages/${packageName}/main.brew`;
     
     try {
-        /* Currently commented out as this triggers even if the package is installed, must work out why this is happening - for further information, read ../../compat.ts
-
         if (!compat.existsSync(packagePath)) {
             throw new ImportError(`Package '${packageName}' not found. Please make sure it is installed.`);
         }
-        */
 
         const packageSource = compat.readFileSync(packagePath, "utf-8");
 

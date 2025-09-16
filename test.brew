@@ -1,3 +1,5 @@
+import utils;
+
 let a = 10;
 let b = 20;
 let name = "Brew";
@@ -105,3 +107,7 @@ let m = addbutreturnearly(k, l);
 
 print(m);
 print(l);
+
+print("-------------------------------------------");
+
+print(utils.greet("Brew"));

@@ -9,7 +9,7 @@ declare global {
                   path: string,
                   options?: { recursive?: boolean },
               ): Promise<void>;
-              existsSync(path: string): boolean;
+              statSync(path: string): { isFile: boolean; isDirectory: boolean };
               readTextFileSync(path: string): string;
           }
         | undefined;
@@ -69,12 +69,10 @@ export const compat = {
         throw new Error("mkdir not supported in this environment");
     },
 
-    // Note: This function is not currently working correctly in Deno, wroking status is unknown in other environments.
-
     existsSync: (path: string): boolean => {
         if (isDeno && Deno) {
             try {
-                Deno.existsSync(path);
+                Deno.statSync(path);
                 return true;
             } catch {
                 return false;
@@ -88,7 +86,7 @@ export const compat = {
         throw new Error("existsSync not supported in this environment");
     },
 
-    readFileSync: (path: string, encoding: string): string => {
+    readFileSync: (path: string, encoding?: string): string => {
         if (isDeno && Deno) {
             return Deno.readTextFileSync(path);
         }
