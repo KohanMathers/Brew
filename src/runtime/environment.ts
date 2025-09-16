@@ -38,7 +38,7 @@ export function CreateGlobalEnv() {
         ["false", MakeBool(false)],
         ["brewver", MakeString("Brew v2.5.0")],
         ["print", MakeInternalCall(PrintFunction)],
-        ["time", MakeInternalCall(TimeFunction)],
+        ["timestamp", MakeInternalCall(TimeFunction)],
         ["nat", MakeInternalCall(NatFunction)],
         ["int", MakeInternalCall(IntFunction)],
         ["float", MakeInternalCall(FloatFunction)],

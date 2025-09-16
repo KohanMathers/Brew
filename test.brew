@@ -1,4 +1,4 @@
-import utils;
+import time;
 
 let a = 10;
 let b = 20;
@@ -110,4 +110,6 @@ print(l);
 
 print("-------------------------------------------");
 
-print(utils.greet("Brew"));
+let n = time.fromUnix(timestamp());
+
+print(n.year);

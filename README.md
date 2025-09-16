@@ -339,7 +339,7 @@ print(message); // "Name: John, Age: 25"
 * `print(...)` - Output values to console (accepts multiple arguments)
 
 #### Utility Functions
-* `time()` - Get current Unix timestamp in milliseconds
+* `timestamp()` - Get current Unix timestamp in seconds
 * `brewver` - Global constant containing the Brew version string
 
 #### Type Conversion Functions
@@ -633,7 +633,7 @@ The following are available in the global scope:
 
 **Built-in Functions:**
 * `print(...)` - Print values to console
-* `time()` - Current Unix timestamp
+* `timestamp()` - Current Unix timestamp
 * `int(value)` - Convert to integer
 * `float(value)` - Convert to float
 * `str(value)` - Convert to string

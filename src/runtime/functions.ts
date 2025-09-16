@@ -17,7 +17,8 @@ import {
  * Return the current unix timestamp as a number
  */
 export function TimeFunction() {
-    return MakeNumber(Date.now());
+    let DateNow = Date.now();
+    return MakeNumber(Math.floor(DateNow / 1000))
 }
 
 /**

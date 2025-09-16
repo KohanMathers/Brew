@@ -1,7 +1,0 @@
-function greet(name) {
-    return "Hello, " + name;
-}
-
-function timestamp() {
-    return time();
-}

@@ -87,6 +87,8 @@ if (!isJVM && (hasArgs || typeof Deno !== "undefined")) {
             Run(args[1]);
         } else if (args[0] === "compile") {
             Compile(args[1], args[2]);
+        } else if (args[0] === "install") {
+            Install(args[1], args[2]);
         } else {
             console.error("Unknown command: " + args[0]);
             compat.exit(1);
@@ -162,7 +164,14 @@ async function Compile(filename: string, className?: string) {
  * @example install kohanmathers.brew-packages example
  * Note to package developers: Lay out the entry point to your package as brew_packages/<packageName>/main.brew, as everything in brew_packages/<packageName> will be downloaded.
  */
-async function Install(githubRepo: string, packageName: string) {}
+async function Install(githubRepo: string, packageName: string) {
+    const splitRepo = githubRepo.split(".");
+    const repoAuthor = splitRepo[0];
+    const repoName = splitRepo[1];
+    const repoLink = "https://github.com/" + repoAuthor + "/" + repoName;
+
+    console.log(repoLink)
+}
 
 /**
  * Cross-platform REPL that works universally

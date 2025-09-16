@@ -11,3 +11,4 @@ brew-engine.js
 build-to-jar.js
 TestBrewJVM.java
 TestBrewJVM.class
+brew_packages/
