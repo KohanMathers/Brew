@@ -63,11 +63,13 @@ export default class Environment {
     public parent?: Environment;
     public variables: Map<string, RuntimeValue>;
     private constants: Set<string>;
+    private currentDir?: string;
 
     constructor(parentEnv?: Environment) {
         this.parent = parentEnv;
         this.variables = new Map();
         this.constants = new Set();
+        this.currentDir = undefined;
     }
 
     /**
@@ -124,5 +126,25 @@ export default class Environment {
             );
 
         return this.parent.resolve(varname);
+    }
+
+    /**
+     * Gets the current directory for resolving relative imports
+     */
+    public getCurrentDir(): string | undefined {
+        if (this.currentDir !== undefined) {
+            return this.currentDir;
+        }
+        if (this.parent !== undefined) {
+            return this.parent.getCurrentDir();
+        }
+        return undefined;
+    }
+
+    /**
+     * Sets the current directory for resolving relative imports
+     */
+    public setCurrentDir(dir: string): void {
+        this.currentDir = dir;
     }
 }

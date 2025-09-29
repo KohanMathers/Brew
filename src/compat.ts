@@ -13,6 +13,7 @@ declare global {
               readTextFileSync(path: string): string;
               readDir(path: string): AsyncIterable<{ name: string; isDirectory: boolean }>;
               remove(path: string): Promise<void>;
+              cwd(): string;
           }
         | undefined;
 
@@ -173,5 +174,82 @@ export const compat = {
         }
         
         throw new Error("removeDirOnly not supported in this environment");
+    },
+
+    /**
+     * Resolves a path to an absolute path
+     */
+    resolvePath: (...paths: string[]): string => {
+        if (isDeno && Deno) {
+            const cwd = Deno.cwd();
+            let resolved = cwd;
+            
+            for (const p of paths) {
+                if (p.startsWith('/')) {
+                    resolved = p;
+                } else if (p.startsWith('./') || p.startsWith('../')) {
+                    const parts = resolved.split('/');
+                    const pathParts = p.split('/');
+                    
+                    for (const part of pathParts) {
+                        if (part === '..') {
+                            parts.pop();
+                        } else if (part !== '.' && part !== '') {
+                            parts.push(part);
+                        }
+                    }
+                    resolved = parts.join('/');
+                } else {
+                    resolved = `${resolved}/${p}`;
+                }
+            }
+            
+            return resolved;
+        }
+        
+        if (isJava && Java) {
+            const Paths = Java.type("java.nio.file.Paths");
+            const pathObj = Paths.get(paths[0], ...paths.slice(1));
+            return pathObj.toAbsolutePath().normalize().toString();
+        }
+        
+        throw new Error("resolvePath not supported in this environment");
+    },
+
+    /**
+     * Gets the directory name from a path
+     */
+    dirname: (path: string): string => {
+        if (isDeno || isJava) {
+            const normalized = path.replace(/\\/g, '/');
+            const lastSlash = normalized.lastIndexOf('/');
+            
+            if (lastSlash === -1) {
+                return '.';
+            }
+            
+            if (lastSlash === 0) {
+                return '/';
+            }
+            
+            return normalized.substring(0, lastSlash);
+        }
+        
+        throw new Error("dirname not supported in this environment");
+    },
+
+    /**
+     * Joins path segments
+     */
+    joinPath: (...paths: string[]): string => {
+        if (isDeno || isJava) {
+            return paths
+                .join('/')
+                .replace(/\/+/g, '/')
+                .replace(/\/\.\//g, '/')
+                .replace(/\/\.$/, '');
+        }
+        
+        throw new Error("joinPath not supported in this environment");
     }
 };

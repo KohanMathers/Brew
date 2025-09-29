@@ -18,6 +18,9 @@ import { compat } from "../../compat.ts";
 import { ImportError } from "../errors.ts";
 import Parser from "../parser.ts";
 
+const importCache = new Map<string, RuntimeValue>();
+const importStack = new Set<string>();
+
 /**
  * Evaluates a program
  * Iterates through all statements in the program's body and evaluates them.
@@ -103,23 +106,50 @@ export function EvaluateImportStatement(
     const importPath = statement.value as string;
     let packagePath: string;
     let packageName: string;
+    let packageDir: string;    
     
     if (importPath.startsWith('./') || importPath.startsWith('../')) {
-        packagePath = importPath.endsWith('.brew') ? importPath : `${importPath}.brew`;
+        const currentDir = env.getCurrentDir();
+        if (currentDir) {
+            packagePath = compat.joinPath(currentDir, importPath);
+        } else {
+            packagePath = importPath;
+        }
+        packagePath = packagePath.endsWith('.brew') ? packagePath : `${packagePath}.brew`;
         packageName = importPath.split('/').pop()?.replace('.brew', '') || importPath;
     } else {
         packagePath = `./brew_packages/${importPath}/main.brew`;
         packageName = importPath;
     }
-    
+        
     try {
         if (!compat.existsSync(packagePath)) {
             const pathType = importPath.startsWith('./') || importPath.startsWith('../') ? 'file' : 'package';
-            throw new ImportError(`${pathType === 'file' ? 'File' : 'Package'} '${importPath}' not found. ${pathType === 'package' ? 'Please make sure it is installed.' : 'Please check the file path.'}`);
+            throw new ImportError(`${pathType === 'file' ? 'File' : 'Package'} '${importPath}' not found at '${packagePath}'. ${pathType === 'package' ? 'Please make sure it is installed.' : 'Please check the file path.'}`);
         }
 
-        const packageSource = compat.readFileSync(packagePath, "utf-8");
+        const resolvedPath = compat.resolvePath(packagePath);
+        packageDir = compat.dirname(resolvedPath);
+                
+        // Check cache first
+        if (importCache.has(resolvedPath)) {
+            const cachedValue = importCache.get(resolvedPath)!;
+            env.declareVariable(packageName, cachedValue, false);
+            return cachedValue;
+        }
+        
+        if (importStack.has(resolvedPath)) {
+            const placeholderObject: ObjectValue = {
+                type: "object",
+                properties: new Map<string, RuntimeValue>(),
+            };
+            env.declareVariable(packageName, placeholderObject, false);
+            return placeholderObject;
+        }
+        
+        importStack.add(resolvedPath);
 
+        const packageSource = compat.readFileSync(packagePath, "utf-8");
         const parser = new Parser();
         const packageAST = parser.ProduceAST(packageSource);
 
@@ -129,6 +159,7 @@ export function EvaluateImportStatement(
         }
 
         const packageEnv = new Environment(globalEnv);
+        packageEnv.setCurrentDir(packageDir);
         
         let packageExports: RuntimeValue = MakeNull();
         for (const stmt of packageAST.body) {
@@ -147,10 +178,16 @@ export function EvaluateImportStatement(
             properties: packageObject,
         };
 
-        env.declareVariable(packageName, packageValue, false);
+        importCache.set(resolvedPath, packageValue);
+        importStack.delete(resolvedPath);
 
+        env.declareVariable(packageName, packageValue, false);
         return packageValue;
+        
     } catch (error) {
+        const resolvedPath = compat.resolvePath(packagePath);
+        importStack.delete(resolvedPath);
+        
         if (error instanceof ImportError) {
             throw error;
         } else {
