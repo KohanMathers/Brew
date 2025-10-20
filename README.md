@@ -3,7 +3,7 @@
 ## 🚧 Project Archived – Looking for Maintainer
 
 **Brew is now officially archived.**
-Development has stopped as I’ve moved on to a successor project ([Quill](https://github.com/kohanmather/quill)), which pursues the same goal with a cleaner design and a better future roadmap.
+Development has stopped as I’ve moved on to a successor project ([Quill](https://github.com/kohanmathers/quill)), which pursues the same goal with a cleaner design and a better future roadmap.
 
 This repository will remain online for historical and educational purposes.
 
